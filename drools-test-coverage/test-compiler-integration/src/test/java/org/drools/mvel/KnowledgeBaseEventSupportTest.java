@@ -1,17 +1,21 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel;
 
 import java.io.IOException;
@@ -21,19 +25,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.drools.base.base.ValueResolver;
 import org.drools.core.base.ClassFieldAccessorCache;
+import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.mvel.accessors.ClassFieldAccessorStore;
-import org.drools.core.base.ClassObjectType;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.base.ClassObjectType;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.CoreComponentFactory;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.core.rule.consequence.Consequence;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
+import org.drools.base.rule.consequence.Consequence;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.core.test.model.Cheese;
-import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,11 +112,11 @@ public class KnowledgeBaseEventSupportTest {
         pattern.addConstraint( constraint );
         rule1.addPattern( pattern );
 
-        rule1.setConsequence( new Consequence() {
+        rule1.setConsequence( new Consequence<KnowledgeHelper>() {
             private static final long serialVersionUID = 510l;
 
             public void evaluate(final KnowledgeHelper knowledgeHelper,
-                                 final ReteEvaluator reteEvaluator) throws Exception {
+                                 final ValueResolver valueResolver) throws Exception {
             }
 
             public void readExternal(ObjectInput in) throws IOException,
@@ -139,11 +143,11 @@ public class KnowledgeBaseEventSupportTest {
         pattern2.addConstraint( constraint2 );
         rule2.addPattern( pattern2 );
 
-        rule2.setConsequence( new Consequence() {
+        rule2.setConsequence( new Consequence<KnowledgeHelper>() {
             private static final long serialVersionUID = 510l;
 
             public void evaluate(final KnowledgeHelper knowledgeHelper,
-                                 final ReteEvaluator reteEvaluator) throws Exception {
+                                 final ValueResolver valueResolver) throws Exception {
             }
 
             public void readExternal(ObjectInput in) throws IOException,

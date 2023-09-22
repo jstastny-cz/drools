@@ -1,55 +1,60 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler.consequence;
+
+import org.drools.base.base.ValueResolver;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.consequence.Consequence;
+import org.drools.core.common.DefaultEventHandle;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.reteoo.RuleTerminalNode;
+import org.drools.core.rule.consequence.KnowledgeHelper;
+import org.drools.model.Variable;
+import org.kie.api.runtime.rule.FactHandle;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.drools.core.common.EventFactHandle;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.reteoo.RuleTerminalNode;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.consequence.Consequence;
-import org.drools.core.rule.consequence.KnowledgeHelper;
-import org.drools.core.reteoo.Tuple;
-import org.drools.model.Variable;
-
-public class LambdaConsequence implements Consequence {
+public class LambdaConsequence implements Consequence<KnowledgeHelper> {
 
     // Enable the optimization to extract from the activation tuple the arguments to be passed to this
     // consequence in linear time by traversing the tuple only once.
     private static final boolean ENABLE_LINEARIZED_ARGUMENTS_RETRIEVAL_OPTIMIZATION = true;
 
     private final org.drools.model.Consequence consequence;
-    private final boolean        enabledTupleOptimization;
-    private Declaration[]        requiredDeclarations;
+    private final int factsNr;
+    private final boolean enabledTupleOptimization;
+    private Declaration[] requiredDeclarations;
 
     private TupleFactSupplier[] factSuppliers;
-    private GlobalSupplier[]    globalSuppliers;
-    private Object[]            facts;
+    private GlobalSupplier[] globalSuppliers;
+    private Object[] facts;
 
-    private FactHandleLookup    fhLookup;
+    private FactHandleLookup fhLookup;
 
     public LambdaConsequence( org.drools.model.Consequence consequence, boolean enabledTupleOptimization) {
         this.consequence = consequence;
         this.enabledTupleOptimization = ENABLE_LINEARIZED_ARGUMENTS_RETRIEVAL_OPTIMIZATION & enabledTupleOptimization;
+        this.factsNr = consequence.getVariables().length + ( consequence.isUsingDrools() ? 1 : 0 );
     }
 
     @Override
@@ -58,27 +63,27 @@ public class LambdaConsequence implements Consequence {
     }
 
     @Override
-    public void evaluate( KnowledgeHelper knowledgeHelper, ReteEvaluator reteEvaluator ) throws Exception {
+    public void evaluate(KnowledgeHelper knowledgeHelper, ValueResolver valueResolver) throws Exception {
         if ( this.requiredDeclarations == null ) {
             Declaration[] declarations = (( RuleTerminalNode ) knowledgeHelper.getMatch().getTuple().getTupleSink()).getRequiredDeclarations();
             if (enabledTupleOptimization) {
                 this.requiredDeclarations = declarations;
             } else {
-                Object[] facts = declarationsToFacts( knowledgeHelper, reteEvaluator, knowledgeHelper.getTuple(), declarations, consequence.getVariables(), consequence.isUsingDrools() );
+                Object[] facts = declarationsToFacts( knowledgeHelper, valueResolver, knowledgeHelper.getTuple(), declarations, consequence.getVariables(), consequence.isUsingDrools() );
                 consequence.getBlock().execute( facts );
                 return;
             }
         }
 
         // declarations is not null when first level rule is AND so it is possible to calculate them upfront
-        consequence.getBlock().execute( fetchFacts( knowledgeHelper, reteEvaluator ) );
+        consequence.getBlock().execute( fetchFacts( knowledgeHelper, valueResolver ) );
     }
 
-    public static Object[] declarationsToFacts(ReteEvaluator reteEvaluator, Tuple tuple, Declaration[] declarations, Variable[] vars ) {
+    public static Object[] declarationsToFacts(ValueResolver reteEvaluator, BaseTuple tuple, Declaration[] declarations, Variable[] vars ) {
         return declarationsToFacts( null, reteEvaluator, tuple, declarations, vars, false );
     }
 
-    private static Object[] declarationsToFacts( KnowledgeHelper knowledgeHelper, ReteEvaluator reteEvaluator, Tuple tuple, Declaration[] declarations, Variable[] vars, boolean useDrools ) {
+    private static Object[] declarationsToFacts( KnowledgeHelper knowledgeHelper, ValueResolver valueResolver, BaseTuple tuple, Declaration[] declarations, Variable[] vars, boolean useDrools ) {
         Object[] objects;
         FactHandleLookup fhLookup = useDrools ? new FactHandleLookup.Multi() : null;
 
@@ -86,7 +91,7 @@ public class LambdaConsequence implements Consequence {
         if ( useDrools ) {
             index++;
             objects = new Object[vars.length + 1];
-            objects[0] = new DroolsImpl( knowledgeHelper, reteEvaluator, fhLookup );
+            objects[0] = new DroolsImpl( knowledgeHelper, valueResolver, fhLookup );
         } else {
             objects = new Object[vars.length];
         }
@@ -95,27 +100,28 @@ public class LambdaConsequence implements Consequence {
         for (Variable var : vars) {
             if ( var.isFact() ) {
                 Declaration declaration = declarations[declrCounter++];
-                InternalFactHandle fh = getOriginalFactHandle( tuple.get( declaration ) );
+                FactHandle fh = getOriginalFactHandle(tuple.get(declaration));
                 if ( useDrools ) {
                     fhLookup.put( fh.getObject(), fh );
                 }
-                objects[index++] = declaration.getValue( reteEvaluator, fh );
+                objects[index++] = declaration.getValue( valueResolver, fh );
             } else {
-                objects[index++] = reteEvaluator.getGlobal( var.getName() );
+                objects[index++] = valueResolver.getGlobal( var.getName() );
             }
         }
         return objects;
     }
 
-    private static InternalFactHandle getOriginalFactHandle( InternalFactHandle handle ) {
+    private static FactHandle getOriginalFactHandle( FactHandle handle ) {
         if ( !handle.isEvent() ) {
             return handle;
         }
-        InternalFactHandle linkedFH = (( EventFactHandle ) handle).getLinkedFactHandle();
+        FactHandle linkedFH = ((DefaultEventHandle) handle).getLinkedFactHandle();
         return linkedFH != null ? linkedFH : handle;
     }
 
-    private Object[] fetchFacts( KnowledgeHelper knowledgeHelper, ReteEvaluator reteEvaluator ) {
+    private Object[] fetchFacts( KnowledgeHelper knowledgeHelper, ValueResolver valueResolver ) {
+        ReteEvaluator reteEvaluator = (ReteEvaluator) valueResolver;
         if (factSuppliers == null) {
             return initConsequence(knowledgeHelper, reteEvaluator);
         }
@@ -123,12 +129,10 @@ public class LambdaConsequence implements Consequence {
         Object[] facts;
         FactHandleLookup fhLookup = null;
         if (reteEvaluator.getRuleSessionConfiguration().isThreadSafe()) {
+            facts = new Object[factsNr];
             if ( consequence.isUsingDrools() ) {
-                facts = new Object[consequence.getVariables().length + 1];
                 fhLookup = FactHandleLookup.create( factSuppliers.length );
                 facts[0] = new DroolsImpl( knowledgeHelper, reteEvaluator, fhLookup );
-            } else {
-                facts = new Object[consequence.getVariables().length];
             }
         } else {
             facts = this.facts;
@@ -139,7 +143,7 @@ public class LambdaConsequence implements Consequence {
             }
         }
 
-        Tuple tuple = knowledgeHelper.getTuple();
+        BaseTuple tuple = knowledgeHelper.getTuple();
         for (int j = 0; j < factSuppliers.length; j++) {
             tuple = factSuppliers[j].resolveAndStore(facts, reteEvaluator, tuple, fhLookup);
         }
@@ -159,7 +163,7 @@ public class LambdaConsequence implements Consequence {
             return consequence.isUsingDrools() ? new Object[] { new DroolsImpl( knowledgeHelper, reteEvaluator, null ) } : new Object[0];
         }
 
-        Tuple tuple = knowledgeHelper.getTuple();
+        BaseTuple tuple = knowledgeHelper.getTuple();
         List<TupleFactSupplier> factSuppliers = new ArrayList<>();
         List<GlobalSupplier> globalSuppliers = new ArrayList<>();
 
@@ -193,7 +197,7 @@ public class LambdaConsequence implements Consequence {
         Collections.sort( factSuppliers );
         Collections.sort( globalSuppliers );
 
-        Tuple current = tuple;
+        BaseTuple current = tuple;
         boolean first = true;
         for (TupleFactSupplier tupleFactSupplier : factSuppliers) {
             int targetTupleIndex = tupleFactSupplier.declarationTupleIndex;
@@ -262,7 +266,7 @@ public class LambdaConsequence implements Consequence {
             }
         }
 
-        public Tuple resolveAndStore(Object[] facts, ReteEvaluator reteEvaluator, Tuple tuple, FactHandleLookup fhLookup) {
+        public BaseTuple resolveAndStore(Object[] facts, ValueResolver reteEvaluator, BaseTuple tuple, FactHandleLookup fhLookup) {
             // traverses the tuple of as many steps as distance between the former supplier and this one
             for (int i = 0; i < offsetFromPrior; i++) {
                 tuple = tuple.getParent();
@@ -271,8 +275,8 @@ public class LambdaConsequence implements Consequence {
             return tuple;
         }
 
-        public void resolveAndStore(Object[] facts, ReteEvaluator reteEvaluator, InternalFactHandle factHandle, FactHandleLookup fhLookup) {
-            InternalFactHandle fh = getOriginalFactHandle( factHandle );
+        public void resolveAndStore(Object[] facts, ValueResolver reteEvaluator, FactHandle factHandle, FactHandleLookup fhLookup) {
+            FactHandle fh = getOriginalFactHandle( factHandle );
             if ( useDrools ) {
                 fhLookup.put( fh.getObject(), fh );
             }

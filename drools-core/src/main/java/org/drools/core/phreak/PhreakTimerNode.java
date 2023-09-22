@@ -1,25 +1,29 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.phreak;
 
-import java.util.Date;
-import java.util.List;
-
+import org.drools.base.common.NetworkNode;
+import org.drools.base.time.JobHandle;
+import org.drools.base.time.Trigger;
+import org.drools.base.time.impl.Timer;
 import org.drools.core.common.ActivationsManager;
-import org.drools.core.common.NetworkNode;
+import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.TupleSets;
@@ -35,11 +39,8 @@ import org.drools.core.reteoo.TimerNode.TimerNodeMemory;
 import org.drools.core.reteoo.Tuple;
 import org.drools.core.time.Job;
 import org.drools.core.time.JobContext;
-import org.drools.core.time.JobHandle;
 import org.drools.core.time.TimerService;
-import org.drools.core.time.Trigger;
 import org.drools.core.time.impl.DefaultJobHandle;
-import org.drools.core.time.impl.Timer;
 import org.drools.core.util.LinkedList;
 import org.drools.core.util.index.TupleList;
 import org.kie.api.definition.rule.Rule;
@@ -47,6 +48,9 @@ import org.kie.api.runtime.Calendars;
 import org.kie.api.runtime.conf.TimedRuleExecutionFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.List;
 
 import static org.drools.core.phreak.BuildtimeSegmentUtilities.nextNodePosMask;
 import static org.drools.core.phreak.RuleNetworkEvaluator.normalizeStagedTuples;
@@ -174,7 +178,7 @@ public class PhreakTimerNode {
 
             if ( leftTuple.getMemory() != null ) {
                 leftTuples.remove( leftTuple ); // it gets removed either way.
-                if ( pctx.getFactHandle().isExpired() ) {
+                if ( ((InternalFactHandle)pctx.getFactHandle()).isExpired() ) {
                     // a expire clashes with insert or update, allow it to propagate once, will handle the expire the second time around
                     doPropagateChildLeftTuple( sink, trgLeftTuples, stagedLeftTuples, leftTuple );
                     tm.getDeleteLeftTuples().add( leftTuple );
@@ -279,7 +283,7 @@ public class PhreakTimerNode {
                 log.trace( "Timer Fire Now {}", leftTuple );
             }
 
-            LeftTuple childLeftTuple = doPropagateChildLeftTuple( sink, trgLeftTuples, stagedLeftTuples, leftTuple );
+            LeftTuple childLeftTuple = doPropagateChildLeftTuple(sink, trgLeftTuples, stagedLeftTuples, leftTuple );
             if (childLeftTuple.getStagedType() != LeftTuple.NONE) {
                 // Flag the newly created childLeftTuple to avoid a reevaluation in case it gets
                 // rescheduled before the end of this doNode loop
@@ -422,7 +426,7 @@ public class PhreakTimerNode {
 
         private void evaluateAndFireRule(PathMemory pmem, ActivationsManager activationsManager) {
             RuleExecutor ruleExecutor = pmem.getRuleAgendaItem().getRuleExecutor();
-            ruleExecutor.reEvaluateNetwork( activationsManager );
+            ruleExecutor.evaluateNetworkIfDirty( activationsManager );
             ruleExecutor.fire( activationsManager );
         }
     }

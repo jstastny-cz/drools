@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.management;
 
 import java.lang.management.ManagementFactory;
@@ -26,7 +28,7 @@ import javax.management.ObjectName;
 import javax.management.StandardMBean;
 
 import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.RuntimeComponentFactory;
 import org.kie.api.builder.model.KieSessionModel;
 import org.kie.api.event.KieRuntimeEventManager;
@@ -35,7 +37,7 @@ import org.kie.api.runtime.StatelessKieSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.drools.core.util.Drools.isNativeImage;
+import static org.drools.base.util.Drools.isNativeImage;
 
 /**
  * The main management agent for Drools. The purpose of this 
@@ -56,7 +58,7 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
         return DroolsManagementAgentHolder.INSTANCE;
     }
 
-	static ObjectName createObjectNameFor(RuleBase kbase) {
+	static ObjectName createObjectNameFor(InternalRuleBase kbase) {
 		return DroolsManagementAgent.createObjectName(
 					DroolsManagementAgent.createObjectNameBy(kbase.getContainerId())
 					+ ",kbaseId=" + ObjectName.quote(kbase.getId())
@@ -98,9 +100,9 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
 
     long getNextKnowledgeSessionId();
 
-    void registerKnowledgeBase(RuleBase kbase);
+    void registerKnowledgeBase(InternalRuleBase kbase);
     
-    void unregisterKnowledgeBase(RuleBase kbase);
+    void unregisterKnowledgeBase(InternalRuleBase kbase);
     
     void registerKnowledgeSessionUnderName(CBSKey cbsKey, KieRuntimeEventManager ksession);
 
@@ -228,7 +230,7 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
         }
 
         @Override
-        public void registerKnowledgeBase(RuleBase kbase) {
+        public void registerKnowledgeBase(InternalRuleBase kbase) {
             KnowledgeBaseMonitoring mbean = new KnowledgeBaseMonitoring( kbase );
             registerMBean( kbase,
                     mbean,
@@ -236,7 +238,7 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
         }
 
         @Override
-        public void unregisterKnowledgeBase(RuleBase kbase) {
+        public void unregisterKnowledgeBase(InternalRuleBase kbase) {
             unregisterMBeansFromOwner(kbase);
         }
 
@@ -405,12 +407,12 @@ public interface DroolsManagementAgent extends KieManagementAgentMBean {
         }
 
         @Override
-        public void registerKnowledgeBase(RuleBase kbase) {
+        public void registerKnowledgeBase(InternalRuleBase kbase) {
 
         }
 
         @Override
-        public void unregisterKnowledgeBase(RuleBase kbase) {
+        public void unregisterKnowledgeBase(InternalRuleBase kbase) {
 
         }
 

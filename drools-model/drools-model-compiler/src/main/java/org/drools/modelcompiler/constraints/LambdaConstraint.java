@@ -1,44 +1,45 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler.constraints;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
+import java.util.Optional;
 
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.base.ValueType;
-import org.drools.core.base.field.ObjectFieldImpl;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.reteoo.PropertySpecificUtil;
-import org.drools.core.rule.ContextEntry;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
-import org.drools.core.base.ObjectType;
-import org.drools.core.reteoo.Tuple;
-import org.drools.core.rule.accessor.TupleValueExtractor;
-import org.drools.core.time.Interval;
-import org.drools.core.util.AbstractHashTable.FieldIndex;
-import org.drools.core.util.bitmask.BitMask;
-import org.drools.core.util.index.IndexUtil;
+import org.drools.base.base.ObjectType;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.ValueType;
+import org.drools.base.base.field.ObjectFieldImpl;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.reteoo.PropertySpecificUtil;
+import org.drools.base.rule.ContextEntry;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.rule.accessor.TupleValueExtractor;
+import org.drools.base.time.Interval;
+import org.drools.base.util.FieldIndex;
+import org.drools.base.util.index.ConstraintTypeOperator;
+import org.drools.util.bitmask.BitMask;
 import org.drools.model.AlphaIndex;
 import org.drools.model.BetaIndex;
 import org.drools.model.BetaIndex2;
@@ -52,9 +53,10 @@ import org.drools.model.functions.Function3;
 import org.drools.model.functions.Function4;
 import org.drools.model.functions.PredicateInformation;
 import org.kie.api.KieBaseConfiguration;
+import org.kie.api.runtime.rule.FactHandle;
 
-import static org.drools.core.base.ValueType.determineValueType;
-import static org.drools.core.reteoo.PropertySpecificUtil.getEmptyPropertyReactiveMask;
+import static org.drools.base.base.ValueType.determineValueType;
+import static org.drools.base.reteoo.PropertySpecificUtil.getEmptyPropertyReactiveMask;
 import static org.drools.modelcompiler.util.EvaluationUtil.adaptBitMask;
 
 public class LambdaConstraint extends AbstractConstraint {
@@ -132,15 +134,18 @@ public class LambdaConstraint extends AbstractConstraint {
         }
     }
 
+    /*
+     * pattern is not used in this method because reactOnProperties are already filtered by ExpressionTyper.addReactOnPropertyForArgument
+     */
     @Override
-    public BitMask getListenedPropertyMask( ObjectType objectType, List<String> settableProperties ) {
+    public BitMask getListenedPropertyMask( Optional<Pattern> pattern, ObjectType objectType, List<String> settableProperties ) {
         BitMask mask = adaptBitMask( evaluator.getReactivityBitMask() );
         if (mask != null) {
             return mask;
         }
 
         if (evaluator.getReactiveProps().length == 0) {
-            return super.getListenedPropertyMask( objectType, settableProperties );
+            return super.getListenedPropertyMask( pattern, objectType, settableProperties );
         }
 
         mask = getEmptyPropertyReactiveMask(settableProperties.size());
@@ -173,16 +178,16 @@ public class LambdaConstraint extends AbstractConstraint {
     }
 
     @Override
-    public boolean isAllowed(InternalFactHandle handle, ReteEvaluator reteEvaluator) {
+    public boolean isAllowed(FactHandle handle, ValueResolver valueResolver) {
         try {
-            return evaluator.evaluate(handle, reteEvaluator);
+            return evaluator.evaluate(handle, valueResolver);
         } catch (RuntimeException e) {
             throw new ConstraintEvaluationException(predicateInformation, e);
         }
     }
 
     @Override
-    public boolean isAllowedCachedLeft(ContextEntry context, InternalFactHandle handle) {
+    public boolean isAllowedCachedLeft(ContextEntry context, FactHandle handle) {
         LambdaContextEntry lambdaContext = ((LambdaContextEntry) context);
         try {
             return evaluator.evaluate(handle, lambdaContext.getTuple(), lambdaContext.getReteEvaluator());
@@ -192,7 +197,7 @@ public class LambdaConstraint extends AbstractConstraint {
     }
 
     @Override
-    public boolean isAllowedCachedRight(Tuple tuple, ContextEntry context) {
+    public boolean isAllowedCachedRight(BaseTuple tuple, ContextEntry context) {
         LambdaContextEntry lambdaContext = ((LambdaContextEntry) context);
         try {
             return evaluator.evaluate(lambdaContext.getHandle(), tuple, lambdaContext.getReteEvaluator());
@@ -217,27 +222,27 @@ public class LambdaConstraint extends AbstractConstraint {
     }
 
     @Override
-    public IndexUtil.ConstraintType getConstraintType() {
+    public ConstraintTypeOperator getConstraintType() {
         Index index = evaluator.getIndex();
         if (index != null) {
             switch (index.getConstraintType()) {
                 case EQUAL:
-                    return IndexUtil.ConstraintType.EQUAL;
+                    return ConstraintTypeOperator.EQUAL;
                 case NOT_EQUAL:
-                    return IndexUtil.ConstraintType.NOT_EQUAL;
+                    return ConstraintTypeOperator.NOT_EQUAL;
                 case GREATER_THAN:
-                    return IndexUtil.ConstraintType.GREATER_THAN;
+                    return ConstraintTypeOperator.GREATER_THAN;
                 case GREATER_OR_EQUAL:
-                    return IndexUtil.ConstraintType.GREATER_OR_EQUAL;
+                    return ConstraintTypeOperator.GREATER_OR_EQUAL;
                 case LESS_THAN:
-                    return IndexUtil.ConstraintType.LESS_THAN;
+                    return ConstraintTypeOperator.LESS_THAN;
                 case LESS_OR_EQUAL:
-                    return IndexUtil.ConstraintType.LESS_OR_EQUAL;
+                    return ConstraintTypeOperator.LESS_OR_EQUAL;
                 case RANGE:
-                    return IndexUtil.ConstraintType.RANGE;
+                    return ConstraintTypeOperator.RANGE;
             }
         }
-        return IndexUtil.ConstraintType.UNKNOWN;
+        return ConstraintTypeOperator.UNKNOWN;
     }
 
     @Override
@@ -276,18 +281,18 @@ public class LambdaConstraint extends AbstractConstraint {
 
     public static class LambdaContextEntry implements ContextEntry {
 
-        private Tuple tuple;
-        private InternalFactHandle handle;
+        private BaseTuple tuple;
+        private FactHandle handle;
 
-        private transient ReteEvaluator reteEvaluator;
+        private transient ValueResolver valueResolver;
 
-        public void updateFromTuple(ReteEvaluator reteEvaluator, Tuple tuple) {
+        public void updateFromTuple(ValueResolver valueResolver, BaseTuple tuple) {
             this.tuple = tuple;
-            this.reteEvaluator = reteEvaluator;
+            this.valueResolver = valueResolver;
         }
 
-        public void updateFromFactHandle(ReteEvaluator reteEvaluator, InternalFactHandle handle) {
-            this.reteEvaluator = reteEvaluator;
+        public void updateFromFactHandle(ValueResolver valueResolver, FactHandle handle) {
+            this.valueResolver = valueResolver;
             this.handle = handle;
         }
 
@@ -296,7 +301,7 @@ public class LambdaConstraint extends AbstractConstraint {
         }
 
         public void resetFactHandle() {
-            reteEvaluator = null;
+            valueResolver = null;
             handle = null;
         }
 
@@ -306,20 +311,20 @@ public class LambdaConstraint extends AbstractConstraint {
         }
 
         public void readExternal(ObjectInput in ) throws IOException, ClassNotFoundException {
-            tuple = (Tuple)in.readObject();
-            handle = (InternalFactHandle) in.readObject();
+            tuple = (BaseTuple) in.readObject();
+            handle = (FactHandle) in.readObject();
         }
 
-        public Tuple getTuple() {
+        public BaseTuple getTuple() {
             return tuple;
         }
 
-        public InternalFactHandle getHandle() {
+        public FactHandle getHandle() {
             return handle;
         }
 
-        public ReteEvaluator getReteEvaluator() {
-            return reteEvaluator;
+        public ValueResolver getReteEvaluator() {
+            return valueResolver;
         }
 
         public ContextEntry getNext() {
@@ -379,8 +384,8 @@ public class LambdaConstraint extends AbstractConstraint {
         }
 
         @Override
-        public Object getValue( ReteEvaluator reteEvaluator, Tuple tuple ) {
-            return extractor.apply( d1.getValue( reteEvaluator, tuple ) );
+        public Object getValue( ValueResolver valueResolver, BaseTuple tuple ) {
+            return extractor.apply( d1.getValue( valueResolver, tuple ) );
         }
 
         @Override
@@ -417,8 +422,8 @@ public class LambdaConstraint extends AbstractConstraint {
         }
 
         @Override
-        public Object getValue( ReteEvaluator reteEvaluator, Tuple tuple ) {
-            return extractor.apply( d1.getValue( reteEvaluator, tuple ), d2.getValue( reteEvaluator, tuple ) );
+        public Object getValue( ValueResolver valueResolver, BaseTuple tuple ) {
+            return extractor.apply( d1.getValue( valueResolver, tuple ), d2.getValue( valueResolver, tuple ) );
         }
 
         @Override
@@ -459,8 +464,8 @@ public class LambdaConstraint extends AbstractConstraint {
         }
 
         @Override
-        public Object getValue( ReteEvaluator reteEvaluator, Tuple tuple ) {
-            return extractor.apply( d1.getValue( reteEvaluator, tuple ), d2.getValue( reteEvaluator, tuple ), d3.getValue( reteEvaluator, tuple ) );
+        public Object getValue( ValueResolver valueResolver, BaseTuple tuple ) {
+            return extractor.apply( d1.getValue( valueResolver, tuple ), d2.getValue( valueResolver, tuple ), d3.getValue( valueResolver, tuple ) );
         }
 
         @Override
@@ -505,8 +510,8 @@ public class LambdaConstraint extends AbstractConstraint {
         }
 
         @Override
-        public Object getValue( ReteEvaluator reteEvaluator, Tuple tuple ) {
-            return extractor.apply( d1.getValue( reteEvaluator, tuple ), d2.getValue( reteEvaluator, tuple ), d3.getValue( reteEvaluator, tuple ), d4.getValue( reteEvaluator, tuple ) );
+        public Object getValue( ValueResolver valueResolver, BaseTuple tuple ) {
+            return extractor.apply( d1.getValue( valueResolver, tuple ), d2.getValue( valueResolver, tuple ), d3.getValue( valueResolver, tuple ), d4.getValue( valueResolver, tuple ) );
         }
 
         @Override

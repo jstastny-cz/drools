@@ -1,19 +1,21 @@
-/*
- * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.kie.dmn.feel.runtime.functions;
 
 import java.lang.annotation.Annotation;
@@ -41,7 +43,6 @@ import org.kie.dmn.feel.runtime.events.FEELEventBase;
 import org.kie.dmn.feel.runtime.events.InvalidParametersEvent;
 import org.kie.dmn.feel.util.Either;
 import org.kie.dmn.feel.util.EvalHelper;
-import org.kie.dmn.model.api.GwtIncompatible;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +75,6 @@ public abstract class BaseFEELFunction
     }
 
     @Override
-    @GwtIncompatible
     public Object invokeReflectively(EvaluationContext ctx, Object[] params) {
         // use reflection to call the appropriate invoke method
         try {
@@ -187,7 +187,6 @@ public abstract class BaseFEELFunction
         return params;
     }
 
-    @GwtIncompatible
     private CandidateMethod getCandidateMethod(EvaluationContext ctx, Object[] params, boolean isNamedParams, List<String> available) {
         CandidateMethod candidate = null;
         // first, look for exact matches
@@ -299,7 +298,6 @@ public abstract class BaseFEELFunction
     /**
      * Adjust CandidateMethod considering var args signature. 
      */
-    @GwtIncompatible
     private void adjustForVariableParameters(CandidateMethod cm, Class<?>[] parameterTypes) {
         if ( parameterTypes.length > 0 && parameterTypes[parameterTypes.length - 1].isArray() ) {
             // then it is a variable parameters function call
@@ -314,7 +312,6 @@ public abstract class BaseFEELFunction
         }
     }
 
-    @GwtIncompatible
     private Object[] calculateActualParams(EvaluationContext ctx, Method m, Object[] params, List<String> available) {
         Annotation[][] pas = m.getParameterAnnotations();
         List<String> names = new ArrayList<>( m.getParameterCount() );
@@ -384,7 +381,6 @@ public abstract class BaseFEELFunction
         return false;
     }
 
-    @GwtIncompatible
     private static class CandidateMethod {
         private Method   apply         = null;
         private Object[] actualParams;

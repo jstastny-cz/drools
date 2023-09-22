@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.compiler.compiler;
 
 import java.util.List;
@@ -24,6 +27,7 @@ import org.drools.compiler.rule.builder.EnabledBuilder;
 import org.drools.compiler.rule.builder.EngineElementBuilder;
 import org.drools.compiler.rule.builder.EntryPointBuilder;
 import org.drools.compiler.rule.builder.FromBuilder;
+import org.drools.compiler.rule.builder.GroupByBuilder;
 import org.drools.compiler.rule.builder.GroupElementBuilder;
 import org.drools.compiler.rule.builder.PackageBuildContext;
 import org.drools.compiler.rule.builder.PatternBuilder;
@@ -34,9 +38,9 @@ import org.drools.compiler.rule.builder.RuleClassBuilder;
 import org.drools.compiler.rule.builder.RuleConditionBuilder;
 import org.drools.compiler.rule.builder.SalienceBuilder;
 import org.drools.util.TypeResolver;
-import org.drools.core.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.InternalKnowledgePackage;
 import org.drools.core.rule.JavaDialectRuntimeData;
-import org.drools.core.definitions.rule.impl.QueryImpl;
+import org.drools.base.definitions.rule.impl.QueryImpl;
 import org.drools.drl.ast.descr.AndDescr;
 import org.drools.drl.ast.descr.BaseDescr;
 import org.drools.drl.ast.descr.EntryPointDescr;
@@ -51,7 +55,7 @@ import org.drools.drl.ast.descr.RuleDescr;
 import org.kie.api.io.Resource;
 import org.kie.internal.builder.KnowledgeBuilderResult;
 
-import static org.drools.core.base.CoreComponentsBuilder.throwExceptionForMissingMvel;
+import static org.drools.base.base.CoreComponentsBuilder.throwExceptionForMissingMvel;
 
 /**
  * A Dialect implementation handles the building and execution of code
@@ -78,6 +82,8 @@ public interface Dialect {
     RuleConditionBuilder getEvalBuilder();
 
     AccumulateBuilder getAccumulateBuilder();
+
+    GroupByBuilder getGroupByBuilder();
 
     PredicateBuilder getPredicateBuilder();
 
@@ -246,6 +252,10 @@ public interface Dialect {
 
         @Override
         public AccumulateBuilder getAccumulateBuilder() {
+            return throwExceptionForMissingMvel();
+        }
+
+        public GroupByBuilder getGroupByBuilder() {
             return throwExceptionForMissingMvel();
         }
 

@@ -1,39 +1,35 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.builder;
-
-import java.beans.Introspector;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 import org.drools.compiler.compiler.AnalysisResult;
 import org.drools.compiler.compiler.BoundIdentifiers;
 import org.drools.compiler.compiler.DescrBuildError;
 import org.drools.compiler.rule.builder.ConsequenceBuilder;
 import org.drools.compiler.rule.builder.RuleBuildContext;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.reteoo.RuleTerminalNode.SortDeclarations;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.TypeDeclaration;
-import org.drools.core.rule.accessor.DeclarationScopeResolver;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.reteoo.SortDeclarations;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.rule.accessor.DeclarationScopeResolver;
 import org.drools.core.rule.consequence.KnowledgeHelper;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.util.bitmask.BitMask;
 import org.drools.drl.ast.descr.RuleDescr;
 import org.drools.mvel.MVELDialectRuntimeData;
 import org.drools.mvel.expr.MVELCompilationUnit;
@@ -41,14 +37,18 @@ import org.drools.mvel.expr.MVELConsequence;
 import org.mvel2.Macro;
 import org.mvel2.MacroProcessor;
 
-import static org.drools.core.reteoo.PropertySpecificUtil.allSetButTraitBitMask;
-import static org.drools.core.reteoo.PropertySpecificUtil.getEmptyPropertyReactiveMask;
-import static org.drools.core.reteoo.PropertySpecificUtil.setPropertyOnMask;
+import static org.drools.base.reteoo.PropertySpecificUtil.allSetButTraitBitMask;
+import static org.drools.base.reteoo.PropertySpecificUtil.getEmptyPropertyReactiveMask;
+import static org.drools.base.reteoo.PropertySpecificUtil.setPropertyOnMask;
 import static org.drools.mvel.asm.AsmUtil.copyErrorLocation;
 import static org.drools.util.StringUtils.findEndOfBlockIndex;
 import static org.drools.util.StringUtils.findEndOfMethodArgsIndex;
 import static org.drools.util.StringUtils.splitModifyBlock;
-import static org.drools.util.StringUtils.splitStatements;
+import static org.drools.util.StringUtils.splitStatementsAcrossBlocks;
+
+import java.beans.Introspector;
+import java.util.*;
+import java.util.function.Function;
 
 public class MVELConsequenceBuilder
     implements
@@ -272,7 +272,7 @@ public class MVELConsequenceBuilder
             BitMask modificationMask = getEmptyPropertyReactiveMask(settableProperties.size());
             boolean directAccess = false;
 
-            for (String expr : splitStatements(text)) {
+            for (String expr : splitStatementsAcrossBlocks(text)) {
                 if (expr.startsWith( identifier + "." )) {
                     int fieldEnd = identifier.length()+1;
                     while (Character.isJavaIdentifierPart( expr.charAt( fieldEnd ) )) fieldEnd++;

@@ -1,26 +1,28 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.accessors;
 
 import java.lang.reflect.Method;
 
-import org.drools.core.base.BaseClassFieldReader;
-import org.drools.core.base.ValueType;
-import org.drools.core.common.ReteEvaluator;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.BaseClassFieldReader;
+import org.drools.base.base.ValueType;
 
 public abstract class BaseDoubleClassFieldReader extends BaseClassFieldReader {
 
@@ -44,57 +46,57 @@ public abstract class BaseDoubleClassFieldReader extends BaseClassFieldReader {
     public BaseDoubleClassFieldReader() {
     }
 
-    public Object getValue(ReteEvaluator reteEvaluator, final Object object) {
-        return Double.valueOf( getDoubleValue( reteEvaluator, object ) );
+    public Object getValue(ValueResolver valueResolver, final Object object) {
+        return Double.valueOf( getDoubleValue( valueResolver, object ) );
     }
 
-    public boolean getBooleanValue(ReteEvaluator reteEvaluator, final Object object) {
+    public boolean getBooleanValue(ValueResolver valueResolver, final Object object) {
         throw new RuntimeException( "Conversion to boolean not supported from double" );
     }
 
-    public byte getByteValue(ReteEvaluator reteEvaluator, final Object object) {
-        return (byte) getDoubleValue( reteEvaluator, object );
+    public byte getByteValue(ValueResolver valueResolver, final Object object) {
+        return (byte) getDoubleValue( valueResolver, object );
 
     }
 
-    public char getCharValue(ReteEvaluator reteEvaluator, final Object object) {
+    public char getCharValue(ValueResolver valueResolver, final Object object) {
         throw new RuntimeException( "Conversion to char not supported from double" );
     }
 
-    public abstract double getDoubleValue(ReteEvaluator reteEvaluator, Object object);
+    public abstract double getDoubleValue(ValueResolver valueResolver, Object object);
 
-    public float getFloatValue(ReteEvaluator reteEvaluator, final Object object) {
-        return (float) getDoubleValue( reteEvaluator, object );
+    public float getFloatValue(ValueResolver valueResolver, final Object object) {
+        return (float) getDoubleValue( valueResolver, object );
     }
 
-    public int getIntValue(ReteEvaluator reteEvaluator, final Object object) {
-        return (int) getDoubleValue( reteEvaluator, object );
+    public int getIntValue(ValueResolver valueResolver, final Object object) {
+        return (int) getDoubleValue( valueResolver, object );
     }
 
-    public long getLongValue(ReteEvaluator reteEvaluator, final Object object) {
-        return (long) getDoubleValue( reteEvaluator, object );
+    public long getLongValue(ValueResolver valueResolver, final Object object) {
+        return (long) getDoubleValue( valueResolver, object );
     }
 
-    public short getShortValue(ReteEvaluator reteEvaluator, final Object object) {
-        return (short) getDoubleValue( reteEvaluator, object );
+    public short getShortValue(ValueResolver valueResolver, final Object object) {
+        return (short) getDoubleValue( valueResolver, object );
     }
 
-    public boolean isNullValue(ReteEvaluator reteEvaluator, final Object object) {
+    public boolean isNullValue(ValueResolver valueResolver, final Object object) {
         return false;
     }
 
     public Method getNativeReadMethod() {
         try {
             return this.getClass().getDeclaredMethod("getDoubleValue",
-                                                     ReteEvaluator.class, Object.class);
+                                                     ValueResolver.class, Object.class);
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report to development team: " + e.getMessage(),
                                         e );
         }
     }
 
-    public int getHashCode(ReteEvaluator reteEvaluator, final Object object) {
-        final long temp = Double.doubleToLongBits( getDoubleValue( reteEvaluator, object ) );
+    public int getHashCode(ValueResolver valueResolver, final Object object) {
+        final long temp = Double.doubleToLongBits( getDoubleValue( valueResolver, object ) );
         return (int) (temp ^ (temp >>> 32));
     }
 

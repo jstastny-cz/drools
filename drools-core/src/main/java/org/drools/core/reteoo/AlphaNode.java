@@ -1,34 +1,38 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
-import java.util.List;
-
-import org.drools.core.base.ObjectType;
+import org.drools.base.base.ObjectType;
+import org.drools.base.common.NetworkNode;
+import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.reteoo.BaseTerminalNode;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.NetworkNode;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.RuleBasePartitionId;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.util.bitmask.BitMask;
 import org.kie.api.definition.rule.Rule;
+
+import java.util.List;
 
 /**
  * <code>AlphaNodes</code> are nodes in the <code>Rete</code> network used
@@ -71,11 +75,10 @@ public class AlphaNode extends ObjectSource
                      final ObjectSource objectSource,
                      final BuildContext context) {
         super(id,
-                context.getPartitionId(),
-                context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation(),
-                objectSource,
-                context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeHashingThreshold(),
-                context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeRangeIndexThreshold());
+              context.getPartitionId(),
+              objectSource,
+              context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeHashingThreshold(),
+              context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeRangeIndexThreshold());
 
         this.constraint = constraint.cloneIfInUse();
         this.constraint.registerEvaluationContext(context);
@@ -279,12 +282,12 @@ public class AlphaNode extends ObjectSource
         }
 
         @Override
-        public void addAssociatedTerminal(TerminalNode terminalNode) {
+        public void addAssociatedTerminal(BaseTerminalNode terminalNode) {
             sink.addAssociatedTerminal(terminalNode);
         }
 
         @Override
-        public void removeAssociatedTerminal(TerminalNode terminalNode) {
+        public void removeAssociatedTerminal(BaseTerminalNode terminalNode) {
             sink.removeAssociatedTerminal(terminalNode);
         }
 
@@ -294,7 +297,7 @@ public class AlphaNode extends ObjectSource
         }
 
         @Override
-        public boolean hasAssociatedTerminal(NetworkNode terminalNode) {
+        public boolean hasAssociatedTerminal(BaseTerminalNode terminalNode) {
             return sink.hasAssociatedTerminal(terminalNode);
         }
 

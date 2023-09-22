@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.evaluators;
 
 import java.io.IOException;
@@ -23,14 +25,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.drools.core.base.ValueType;
+import org.drools.base.base.ValueType;
 import org.drools.compiler.rule.builder.EvaluatorDefinition;
 import org.drools.drl.parser.impl.Operator;
-import org.drools.core.util.TimeIntervalParser;
-import org.drools.core.common.EventFactHandle;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.rule.accessor.Evaluator;
-import org.drools.core.time.Interval;
+import org.drools.base.util.TimeIntervalParser;
+import org.drools.core.common.DefaultEventHandle;
+import org.drools.base.rule.accessor.Evaluator;
+import org.drools.base.time.Interval;
+import org.kie.api.runtime.rule.FactHandle;
 
 /**
  * <p>The implementation of the 'before' evaluator definition.</p>
@@ -243,13 +245,13 @@ public class BeforeEvaluatorDefinition
         }
 
         @Override
-        protected long getLeftTimestamp( InternalFactHandle handle ) {
-            return ( (EventFactHandle) handle ).getStartTimestamp();
+        protected long getLeftTimestamp( FactHandle handle) {
+            return ( (DefaultEventHandle) handle ).getStartTimestamp();
         }
 
         @Override
-        protected long getRightTimestamp( InternalFactHandle handle ) {
-            return ( (EventFactHandle) handle ).getEndTimestamp();
+        protected long getRightTimestamp( FactHandle handle ) {
+            return ( (DefaultEventHandle) handle ).getEndTimestamp();
         }
     }
 }

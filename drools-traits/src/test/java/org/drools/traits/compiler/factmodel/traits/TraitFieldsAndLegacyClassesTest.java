@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.traits.compiler.factmodel.traits;
 
 import java.util.ArrayList;
@@ -22,7 +25,6 @@ import java.util.List;
 
 import org.drools.traits.compiler.CommonTraitTest;
 import org.drools.traits.compiler.ReviseTraitTestWithPRAlwaysCategory;
-import org.drools.core.factmodel.FieldDefinition;
 import org.drools.traits.core.factmodel.TraitFactoryImpl;
 import org.drools.traits.core.factmodel.VirtualPropertyMode;
 import org.junit.Ignore;
@@ -64,8 +66,8 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits0;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
-                     "import org.drools.core.factmodel.traits.Thing;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Thing;\n"+
                      "import java.util.*\n"+
                      "import " + Parent.class.getCanonicalName() + ";\n" +
                      "import " + Child.class.getCanonicalName() + ";\n" +
@@ -129,8 +131,8 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
-                     "import org.drools.core.factmodel.traits.Trait;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Trait;\n" +
                      "" +
                      "global java.util.List list;\n"+
                      "\n"+
@@ -216,7 +218,7 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits2;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
                      "global java.util.List list;\n"+
                      "\n"+
                      "declare trait ParentTrait\n" +
@@ -314,7 +316,7 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits3;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
                      "global java.util.List list;\n"+
                      "\n"+
                      "declare trait ParentTrait\n" +
@@ -410,7 +412,7 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits4;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
                      "global java.util.List list;\n"+
                      "\n"+
                      "declare trait ParentTrait\n" +
@@ -488,8 +490,8 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits5;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
-                     "import org.drools.core.factmodel.traits.Trait;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Trait;\n"+
 
                      "global java.util.List list;\n"+
                      "\n" +
@@ -572,9 +574,9 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits6;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
-                     "import org.drools.core.factmodel.traits.Trait;\n"+
-                     "import org.drools.core.factmodel.traits.Thing;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Trait;\n"+
+                     "import org.drools.base.factmodel.traits.Thing;\n"+
                      "import " + Child.class.getCanonicalName() + ";\n" +       //<<<<<<
                      "global java.util.List list;\n"+
                      "\n"+
@@ -665,9 +667,9 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
-                     "import org.drools.core.factmodel.traits.Trait;\n"+
-                     "import org.drools.core.factmodel.traits.Thing;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Trait;\n"+
+                     "import org.drools.base.factmodel.traits.Thing;\n"+
                      "import " + Child.class.getCanonicalName() + ";\n" +
                      "import " + Parent.class.getCanonicalName() + ";\n" +  //<<<<<
                      "global java.util.List list;\n"+
@@ -749,8 +751,8 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits8;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
-                     "import org.drools.core.factmodel.traits.Thing;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Thing;\n"+
                      "import " + Child.class.getCanonicalName() + ";\n" +
                      "import " + Parent.class.getCanonicalName() + ";\n" +  //<<<<<
                      "global java.util.List list;\n"+
@@ -831,8 +833,8 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits9;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
-                     "import org.drools.core.factmodel.traits.Thing;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Thing;\n"+
                      "import " + Child.class.getCanonicalName() + ";\n" +
                      "import " + Parent.class.getCanonicalName() + ";\n" +  //<<<<<
                      "global java.util.List list;\n"+
@@ -922,8 +924,8 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
-                     "import org.drools.core.factmodel.traits.Thing;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Thing;\n"+
                      "import " + Child.class.getCanonicalName() + ";\n" +
                      "import " + Parent.class.getCanonicalName() + ";\n" +  //<<<<<
                      "global java.util.List list;\n"+
@@ -1014,8 +1016,8 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.factmodel.traits;\n" +
                      "\n"+
-                     "import org.drools.core.factmodel.traits.Traitable;\n"+
-                     "import org.drools.core.factmodel.traits.Thing;\n"+
+                     "import org.drools.base.factmodel.traits.Traitable;\n"+
+                     "import org.drools.base.factmodel.traits.Thing;\n"+
                      "global java.util.List list;\n"+
                      "\n"+
                      "declare trait ParentTrait\n" +
@@ -1125,7 +1127,7 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
         String drl = "" +
                      "package org.drools.traits.test;\n" +
                      "\n" +
-                     "import org.drools.core.factmodel.traits.Traitable;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n" +
                      "\n" +
                      "\n" +
                      "global java.util.List list;\n" +
@@ -1264,7 +1266,7 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
 
         String drl = "" +
                      "package org.drools.traits.test;\n" +
-                     "import org.drools.core.factmodel.traits.Traitable;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n" +
                      "\n" +
                      "global java.util.List list;\n" +
                      "\n" +
@@ -1305,7 +1307,7 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
 
         drl = "" +
               "package org.drools.traits.test;\n" +
-              "import org.drools.core.factmodel.traits.Traitable;\n" +
+              "import org.drools.base.factmodel.traits.Traitable;\n" +
               "\n" +
               "global java.util.List list;\n" +
               "\n" +
@@ -1345,7 +1347,7 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
 
         drl = "" +
               "package org.drools.traits.test;\n" +
-              "import org.drools.core.factmodel.traits.Traitable;\n" +
+              "import org.drools.base.factmodel.traits.Traitable;\n" +
               "\n" +
               "global java.util.List list;\n" +
               "\n" +
@@ -1385,7 +1387,7 @@ public class TraitFieldsAndLegacyClassesTest extends CommonTraitTest {
 
         drl = "" +
               "package org.drools.traits.test;\n" +
-              "import org.drools.core.factmodel.traits.Traitable;\n" +
+              "import org.drools.base.factmodel.traits.Traitable;\n" +
               "\n" +
               "global java.util.List list;\n" +
               "\n" +

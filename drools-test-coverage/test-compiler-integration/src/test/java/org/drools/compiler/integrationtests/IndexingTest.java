@@ -1,19 +1,21 @@
-/*
- * Copyright 2018 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
 
 import java.math.BigDecimal;
@@ -24,15 +26,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.drools.ancompiler.CompiledNetwork;
-import org.drools.core.base.ClassObjectType;
-import org.drools.core.base.DroolsQuery;
+import org.drools.base.base.DroolsQuery;
+import org.drools.base.base.ClassObjectType;
+import org.drools.core.common.BetaConstraints;
 import org.drools.core.common.DoubleNonIndexSkipBetaConstraints;
 import org.drools.core.common.EmptyBetaConstraints;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.SingleBetaConstraints;
 import org.drools.core.common.TripleNonIndexSkipBetaConstraints;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.AlphaNode;
 import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.CompositeObjectSinkAdapter;
@@ -41,9 +44,11 @@ import org.drools.core.reteoo.LeftInputAdapterNode;
 import org.drools.core.reteoo.NotNode;
 import org.drools.core.reteoo.ObjectSinkPropagator;
 import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.reteoo.ReteDumper;
 import org.drools.core.reteoo.RightTuple;
+import org.drools.core.reteoo.RightTupleImpl;
+import org.drools.core.reteoo.TupleMemory;
 import org.drools.core.util.FastIterator;
+import org.drools.core.util.index.TupleIndexHashTable;
 import org.drools.kiesession.session.StatefulKnowledgeSessionImpl;
 import org.drools.testcoverage.common.model.Cheese;
 import org.drools.testcoverage.common.model.Person;
@@ -255,7 +260,7 @@ public class IndexingTest {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("indexing-test", kieBaseTestConfiguration, drl);
         final InternalWorkingMemory wm = (InternalWorkingMemory) kbase.newKieSession();
         try {
-            final List<ObjectTypeNode> nodes = ((RuleBase) kbase).getRete().getObjectTypeNodes();
+            final List<ObjectTypeNode> nodes = ((InternalRuleBase) kbase).getRete().getObjectTypeNodes();
             ObjectTypeNode node = null;
             for (final ObjectTypeNode n : nodes) {
                 if (((ClassObjectType) n.getObjectType()).getClassType() == DroolsQuery.class) {
@@ -290,9 +295,8 @@ public class IndexingTest {
 
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("indexing-test", kieBaseTestConfiguration, drl);
         final StatefulKnowledgeSessionImpl wm = (StatefulKnowledgeSessionImpl) kbase.newKieSession();
-        ReteDumper.dumpRete( wm );
         try {
-            final List<ObjectTypeNode> nodes = ((RuleBase) kbase).getRete().getObjectTypeNodes();
+            final List<ObjectTypeNode> nodes = ((InternalRuleBase) kbase).getRete().getObjectTypeNodes();
             ObjectTypeNode node = null;
             for (final ObjectTypeNode n : nodes) {
                 if (((ClassObjectType) n.getObjectType()).getClassType() == DroolsQuery.class) {
@@ -425,7 +429,7 @@ public class IndexingTest {
         final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("indexing-test", kieBaseTestConfiguration, drl);
         final StatefulKnowledgeSessionImpl wm = (StatefulKnowledgeSessionImpl) kbase.newKieSession();
         try {
-            final List<ObjectTypeNode> nodes = ((RuleBase) kbase).getRete().getObjectTypeNodes();
+            final List<ObjectTypeNode> nodes = ((InternalRuleBase) kbase).getRete().getObjectTypeNodes();
             ObjectTypeNode node = null;
             for (final ObjectTypeNode n : nodes) {
                 if (((ClassObjectType) n.getObjectType()).getClassType() == DroolsQuery.class) {
@@ -479,8 +483,9 @@ public class IndexingTest {
 
             // check we can resume from each entry in the list above.
             for (int i = 0; i < 100; i++) {
-                final RightTuple rightTuple = list.get(i);
-                it = bm.getRightTupleMemory().fullFastIterator(rightTuple); // resumes from the current rightTuple
+                final RightTupleImpl rightTuple = (RightTupleImpl) list.get(i);
+                TupleMemory rightTupleMemory = bm.getRightTupleMemory();
+                it = (rightTupleMemory).fullFastIterator(rightTuple); // resumes from the current rightTuple
                 int j = i + 1;
                 for (RightTuple rt = (RightTuple) it.next(rightTuple); rt != null; rt = (RightTuple) it.next(rt)) {
                     assertThat(rt).isSameAs(list.get(j));
@@ -1097,5 +1102,81 @@ public class IndexingTest {
         } finally {
             ksession.dispose();
         }
+    }
+
+    public void betaIndexWithBigDecimalAndInt() {
+        String constraints = "salary == $p1.salary, age == $p1.age";
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 30, new BigDecimal("10")), true, 1);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), false, 1);
+    }
+
+    @Test
+    public void betaIndexWithIntAndBigDecimal() {
+        String constraints = "age == $p1.age, salary == $p1.salary";
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 30, new BigDecimal("10")), true, 1);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), false, 1);
+    }
+
+    @Test
+    public void betaIndexWithIntAndBigDecimalAndString() {
+        String constraints = "age == $p1.age, salary == $p1.salary, likes == $p1.likes";
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10"), "dog"), new Person("Paul", 30, new BigDecimal("10"), "dog"), true, 2);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10"), "dog"), new Person("Paul", 30, new BigDecimal("10"), "cat"), false, 2);
+    }
+
+    @Test
+    public void betaIndexWithIntInequalityAndBigDecimal() {
+        String constraints = "age > $p1.age, salary == $p1.salary";
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 40, new BigDecimal("10")), true, 0);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), false, 0);
+    }
+
+    @Test
+    public void betaIndexWithBigDecimalOnly() {
+        String constraints = "salary == $p1.salary";
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("10")), true, 0);
+        betaIndexWithBigDecimalWithAdditionalBetaConstraint(constraints, new Person("John", 30, new BigDecimal("10")), new Person("Paul", 28, new BigDecimal("20")), false, 0);
+    }
+
+    private void betaIndexWithBigDecimalWithAdditionalBetaConstraint(String constraints, Person firstPerson, Person secondPerson, boolean shouldMatch, int expectedIndexCount) {
+        final String drl =
+                "package org.drools.compiler.test\n" +
+                           "import " + Person.class.getCanonicalName() + "\n" +
+                           "global java.util.List list\n" +
+                           "rule R1\n" +
+                           "    when\n" +
+                           "        $p1 : Person( name == \"John\" )\n" +
+                           "        $p2 : Person( name == \"Paul\", " + constraints + " )\n" +
+                           "    then\n" +
+                           "        list.add(\"R1\");\n" +
+                           "end";
+
+        final KieBase kbase = KieBaseUtil.getKieBaseFromKieModuleFromDrl("indexing-test", kieBaseTestConfiguration, drl);
+
+        assertBetaIndex(kbase, Person.class, expectedIndexCount);
+
+        KieSession ksession = kbase.newKieSession();
+
+        try {
+            List<String> list = new ArrayList<>();
+            ksession.setGlobal("list", list);
+            ksession.insert(firstPerson);
+            ksession.insert(secondPerson);
+            ksession.fireAllRules();
+
+            if (shouldMatch) {
+                assertThat(list).as("These constraints should match : " + constraints).containsExactly("R1");
+            } else {
+                assertThat(list).as("These constraints should not match : " + constraints).isEmpty();
+            }
+        } finally {
+            ksession.dispose();
+        }
+    }
+
+    private void assertBetaIndex(KieBase kbase, Class<?> clazz, int expectedIndexCount) {
+        final JoinNode joinNode = KieUtil.getJoinNode(kbase, clazz);
+        BetaConstraints betaConstraints = joinNode.getRawConstraints();
+        assertThat(betaConstraints.getIndexCount()).as("IndexCount represents how many constrains are indexed").isEqualTo(expectedIndexCount);
     }
 }

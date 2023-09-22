@@ -1,29 +1,30 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.phreak;
 
-import java.io.Serializable;
-import java.util.concurrent.CountDownLatch;
-
-import org.drools.core.base.DroolsQuery;
-import org.drools.core.common.EventFactHandle;
+import org.drools.base.facttemplates.Event;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.core.base.DroolsQueryImpl;
+import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.facttemplates.Event;
 import org.drools.core.impl.WorkingMemoryReteExpireAction;
 import org.drools.core.reteoo.ClassObjectTypeConf;
 import org.drools.core.reteoo.CompositePartitionAwareObjectSinkAdapter;
@@ -31,18 +32,23 @@ import org.drools.core.reteoo.EntryPointNode;
 import org.drools.core.reteoo.LeftInputAdapterNode;
 import org.drools.core.reteoo.LeftTupleSource;
 import org.drools.core.reteoo.ModifyPreviousTuples;
-import org.drools.core.reteoo.NodeTypeEnums;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.PathMemory;
 import org.drools.core.reteoo.QueryTerminalNode;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.time.JobContext;
-import org.drools.core.time.JobHandle;
+import org.drools.core.time.impl.DefaultJobHandle;
 import org.drools.core.time.impl.PointInTimeTrigger;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.concurrent.CountDownLatch;
+
+import static org.drools.base.rule.TypeDeclaration.NEVER_EXPIRES;
 import static org.drools.core.reteoo.EntryPointNode.removeRightTuplesMatchingOTN;
-import static org.drools.core.rule.TypeDeclaration.NEVER_EXPIRES;
 
 public interface PropagationEntry {
 
@@ -66,7 +72,7 @@ public interface PropagationEntry {
     boolean defersExpiration();
 
     abstract class AbstractPropagationEntry implements PropagationEntry {
-        private PropagationEntry next;
+        protected PropagationEntry next;
 
         public void setNext(PropagationEntry next) {
             this.next = next;
@@ -142,12 +148,12 @@ public interface PropagationEntry {
     class ExecuteQuery extends PropagationEntry.PropagationEntryWithResult<QueryTerminalNode[]> {
 
         private final String queryName;
-        private final DroolsQuery queryObject;
+        private final DroolsQueryImpl queryObject;
         private final InternalFactHandle handle;
         private final PropagationContext pCtx;
         private final boolean calledFromRHS;
 
-        public ExecuteQuery( String queryName, DroolsQuery queryObject, InternalFactHandle handle, PropagationContext pCtx, boolean calledFromRHS ) {
+        public ExecuteQuery(String queryName, DroolsQueryImpl queryObject, InternalFactHandle handle, PropagationContext pCtx, boolean calledFromRHS) {
             this.queryName = queryName;
             this.queryObject = queryObject;
             this.handle = handle;
@@ -196,12 +202,14 @@ public interface PropagationEntry {
         }
     }
 
-    class Insert extends AbstractPropagationEntry implements Serializable {
+    class Insert extends AbstractPropagationEntry implements Externalizable {
         private static final ObjectTypeNode.ExpireJob job = new ObjectTypeNode.ExpireJob();
 
-        private final InternalFactHandle handle;
-        private final PropagationContext context;
-        private final ObjectTypeConf objectTypeConf;
+        private InternalFactHandle handle;
+        private PropagationContext context;
+        private ObjectTypeConf objectTypeConf;
+
+        public Insert() { }
 
         public Insert( InternalFactHandle handle, PropagationContext context, ReteEvaluator reteEvaluator, ObjectTypeConf objectTypeConf) {
             this.handle = handle;
@@ -221,6 +229,10 @@ public interface PropagationEntry {
         }
 
         private static void propagate( InternalFactHandle handle, PropagationContext context, ReteEvaluator reteEvaluator, ObjectTypeConf objectTypeConf ) {
+            if (objectTypeConf == null) {
+                // it can be null after deserialization
+                objectTypeConf = handle.getEntryPoint(reteEvaluator).getObjectTypeConfigurationRegistry().getOrCreateObjectTypeConf(handle.getEntryPointId(), handle.getObject());
+            }
             for ( ObjectTypeNode otn : objectTypeConf.getObjectTypeNodes() ) {
                 otn.propagateAssert( handle, context, reteEvaluator );
             }
@@ -255,24 +267,22 @@ public interface PropagationEntry {
             }
 
             // DROOLS-455 the calculation of the effectiveEnd may overflow and become negative
-            EventFactHandle eventFactHandle = (EventFactHandle) handle;
+            DefaultEventHandle eventFactHandle = (DefaultEventHandle) handle;
             long nextTimestamp = getNextTimestamp( insertionTime, expirationOffset, eventFactHandle );
 
-            WorkingMemoryReteExpireAction action = new WorkingMemoryReteExpireAction( (EventFactHandle) handle, otn );
+            WorkingMemoryReteExpireAction action = new WorkingMemoryReteExpireAction((DefaultEventHandle) handle, otn );
             if (nextTimestamp <= reteEvaluator.getTimerService().getCurrentTime()) {
                 reteEvaluator.addPropagation( action );
             } else {
                 JobContext jobctx = new ObjectTypeNode.ExpireJobContext( action, reteEvaluator );
-                JobHandle jobHandle = reteEvaluator.getTimerService()
-                                        .scheduleJob( job,
-                                                      jobctx,
-                                                      PointInTimeTrigger.createPointInTimeTrigger( nextTimestamp, null ) );
+                DefaultJobHandle jobHandle = (DefaultJobHandle) reteEvaluator.getTimerService()
+                                                                             .scheduleJob( job, jobctx, PointInTimeTrigger.createPointInTimeTrigger( nextTimestamp, null ) );
                 jobctx.setJobHandle( jobHandle );
                 eventFactHandle.addJob( jobHandle );
             }
         }
 
-        private static long getNextTimestamp( long insertionTime, long expirationOffset, EventFactHandle eventFactHandle ) {
+        private static long getNextTimestamp( long insertionTime, long expirationOffset, DefaultEventHandle eventFactHandle) {
             long effectiveEnd = eventFactHandle.getEndTimestamp() + expirationOffset;
             return Math.max( insertionTime, effectiveEnd >= 0 ? effectiveEnd : Long.MAX_VALUE );
         }
@@ -285,12 +295,28 @@ public interface PropagationEntry {
         public InternalFactHandle getHandle() {
             return handle;
         }
+
+        @Override
+        public void writeExternal(ObjectOutput out) throws IOException {
+            out.writeObject(next);
+            out.writeObject(handle);
+            out.writeObject(context);
+        }
+
+        @Override
+        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+            this.next = (PropagationEntry) in.readObject();
+            this.handle = (InternalFactHandle) in.readObject();
+            this.context = (PropagationContext) in.readObject();
+        }
     }
 
-    class Update extends AbstractPropagationEntry {
-        private final InternalFactHandle handle;
-        private final PropagationContext context;
-        private final ObjectTypeConf objectTypeConf;
+    class Update extends AbstractPropagationEntry implements Externalizable {
+        private InternalFactHandle handle;
+        private PropagationContext context;
+        private ObjectTypeConf objectTypeConf;
+
+        public Update(){}
 
         public Update(InternalFactHandle handle, PropagationContext context, ObjectTypeConf objectTypeConf) {
             this.handle = handle;
@@ -303,6 +329,10 @@ public interface PropagationEntry {
         }
 
         public static void execute(InternalFactHandle handle, PropagationContext pctx, ObjectTypeConf objectTypeConf, ReteEvaluator reteEvaluator) {
+            if (objectTypeConf == null) {
+                // it can be null after deserialization
+                objectTypeConf = handle.getEntryPoint(reteEvaluator).getObjectTypeConfigurationRegistry().getOrCreateObjectTypeConf(handle.getEntryPointId(), handle.getObject());
+            }
             // make a reference to the previous tuples, then null then on the handle
             ModifyPreviousTuples modifyPreviousTuples = new ModifyPreviousTuples( handle.detachLinkedTuples() );
             ObjectTypeNode[] cachedNodes = objectTypeConf.getObjectTypeNodes();
@@ -328,6 +358,20 @@ public interface PropagationEntry {
         @Override
         public String toString() {
             return "Update of " + handle.getObject();
+        }
+
+        @Override
+        public void writeExternal(ObjectOutput out) throws IOException {
+            out.writeObject(next);
+            out.writeObject(handle);
+            out.writeObject(context);
+        }
+
+        @Override
+        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+            this.next = (PropagationEntry) in.readObject();
+            this.handle = (InternalFactHandle) in.readObject();
+            this.context = (PropagationContext) in.readObject();
         }
     }
 
@@ -379,6 +423,10 @@ public interface PropagationEntry {
         }
 
         public void internalExecute(ReteEvaluator reteEvaluator) {
+            execute(reteEvaluator, epn, handle, context, objectTypeConf);
+        }
+
+        public static void execute(ReteEvaluator reteEvaluator, EntryPointNode epn, InternalFactHandle handle, PropagationContext context, ObjectTypeConf objectTypeConf) {
             epn.propagateRetract(handle, context, objectTypeConf, reteEvaluator);
         }
 
@@ -423,7 +471,7 @@ public interface PropagationEntry {
             }
 
             if (handle.isEvent() && isMainPartition()) {
-                ((EventFactHandle) handle).unscheduleAllJobs(reteEvaluator);
+                ((DefaultEventHandle) handle).unscheduleAllJobs(reteEvaluator);
             }
         }
 

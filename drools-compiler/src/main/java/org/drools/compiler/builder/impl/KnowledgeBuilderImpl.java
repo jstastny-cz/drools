@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.builder.impl;
 
 import static java.util.Arrays.asList;
@@ -43,7 +46,6 @@ import org.drools.compiler.builder.impl.processors.PackageCompilationPhase;
 import org.drools.compiler.builder.impl.processors.ReteCompiler;
 import org.drools.compiler.builder.impl.processors.RuleCompilationPhase;
 import org.drools.compiler.builder.impl.processors.RuleValidator;
-import org.drools.compiler.builder.impl.resources.DecisionTableResourceHandler;
 import org.drools.compiler.builder.impl.resources.ResourceHandler;
 import org.drools.compiler.compiler.DroolsWarning;
 import org.drools.compiler.compiler.DuplicateFunction;
@@ -54,14 +56,14 @@ import org.drools.compiler.compiler.ProcessBuilderFactory;
 import org.drools.compiler.compiler.ResourceTypeDeclarationWarning;
 import org.drools.compiler.kie.builder.impl.BuildContext;
 import org.drools.compiler.lang.descr.CompositePackageDescr;
-import org.drools.core.base.ObjectType;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.impl.RuleBase;
+import org.drools.base.base.ObjectType;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.impl.RuleBaseFactory;
-import org.drools.core.rule.Function;
-import org.drools.core.rule.ImportDeclaration;
-import org.drools.core.rule.TypeDeclaration;
+import org.drools.base.rule.Function;
+import org.drools.base.rule.ImportDeclaration;
+import org.drools.base.rule.TypeDeclaration;
 import org.drools.drl.ast.descr.AttributeDescr;
 import org.drools.drl.ast.descr.ImportDescr;
 import org.drools.drl.ast.descr.PackageDescr;
@@ -946,7 +948,7 @@ public class KnowledgeBuilderImpl implements InternalKnowledgeBuilder, TypeDecla
             }
             throw new IllegalArgumentException("Could not parse knowledge. See the logs for details.");
         }
-        RuleBase kbase = RuleBaseFactory.newRuleBase(conf);
+        InternalRuleBase kbase = RuleBaseFactory.newRuleBase(conf);
         kbase.addPackages(asList(getPackages()));
         return KnowledgeBaseFactory.newKnowledgeBase(kbase);
     }

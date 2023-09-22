@@ -1,30 +1,34 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.drools.base.base.ValueResolver;
 import org.drools.compiler.rule.builder.EvaluatorWrapper;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.rule.Declaration;
-import org.drools.core.reteoo.Tuple;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.rule.Declaration;
 import org.drools.mvel.expr.MVELCompilationUnit;
 import org.drools.mvel.expr.MvelEvaluator;
+import org.kie.api.runtime.rule.FactHandle;
 import org.mvel2.MVEL;
 import org.mvel2.ParserConfiguration;
 import org.mvel2.ParserContext;
@@ -92,18 +96,18 @@ public class MVELConditionEvaluator implements ConditionEvaluator {
         this.evaluator = createMvelEvaluator( executableStatement );
     }
 
-    public boolean evaluate(InternalFactHandle handle, ReteEvaluator reteEvaluator, Tuple tuple) {
-        return evaluate(evaluator, handle, reteEvaluator, tuple);
+    public boolean evaluate(FactHandle handle, ValueResolver valueResolver, BaseTuple tuple) {
+        return evaluate(evaluator, handle, valueResolver, tuple);
     }
 
-    private boolean evaluate(MvelEvaluator<Boolean> evaluator, InternalFactHandle handle, ReteEvaluator reteEvaluator, Tuple tuple) {
+    private boolean evaluate(MvelEvaluator<Boolean> evaluator, FactHandle handle, ValueResolver valueResolver, BaseTuple tuple) {
         if (compilationUnit == null) {
-            Map<String, Object> vars = valuesAsMap(handle.getObject(), reteEvaluator, tuple, declarations);
+            Map<String, Object> vars = valuesAsMap(handle.getObject(), valueResolver, tuple, declarations);
             if (operators.length > 0) {
                 if (vars == null) {
                     vars = new HashMap<>();
                 }
-                InternalFactHandle[] handles = tuple != null ? tuple.toFactHandles() : new InternalFactHandle[0];
+                FactHandle[] handles = tuple != null ? tuple.toFactHandles() : new FactHandle[0];
                 for (EvaluatorWrapper operator : operators) {
                     vars.put( operator.getBindingName(), operator );
                     operator.loadHandles(handles, handle);
@@ -113,8 +117,8 @@ public class MVELConditionEvaluator implements ConditionEvaluator {
         }
 
         VariableResolverFactory factory = compilationUnit.createFactory();
-        compilationUnit.updateFactory( handle, tuple, null, reteEvaluator,
-                                       reteEvaluator.getGlobalResolver(),
+        compilationUnit.updateFactory( handle, tuple, null, valueResolver,
+                                       valueResolver.getGlobalResolver(),
                                        factory );
 
         return evaluator.evaluate( handle.getObject(), factory );
@@ -126,41 +130,41 @@ public class MVELConditionEvaluator implements ConditionEvaluator {
                 evaluator.evaluate( object, vars );
     }
 
-    ConditionAnalyzer.Condition getAnalyzedCondition( InternalFactHandle handle, ReteEvaluator reteEvaluator, Tuple leftTuple) {
-        ensureCompleteEvaluation(handle, reteEvaluator, leftTuple);
+    ConditionAnalyzer.Condition getAnalyzedCondition( FactHandle handle, ValueResolver valueResolver, BaseTuple leftTuple) {
+        ensureCompleteEvaluation(handle, valueResolver, leftTuple);
         return new ConditionAnalyzer(executableStatement, declarations, operators, conditionClass).analyzeCondition();
     }
 
-    private void ensureCompleteEvaluation(InternalFactHandle handle, ReteEvaluator reteEvaluator, Tuple tuple) {
+    private void ensureCompleteEvaluation(FactHandle handle, ValueResolver valueResolver, BaseTuple tuple) {
         if (!evaluated) {
             ASTNode rootNode = getRootNode(executableStatement);
             if (rootNode != null) {
-                ensureCompleteEvaluation(rootNode, handle, reteEvaluator, tuple);
+                ensureCompleteEvaluation(rootNode, handle, valueResolver, tuple);
             }
             evaluated = true;
         }
     }
 
-    private void ensureCompleteEvaluation(ASTNode node, InternalFactHandle handle, ReteEvaluator reteEvaluator, Tuple tuple) {
+    private void ensureCompleteEvaluation(ASTNode node, FactHandle handle, ValueResolver valueResolver, BaseTuple tuple) {
         node = unwrap(node);
         if (!(node instanceof And || node instanceof Or)) {
-            evaluateIfNecessary(handle, reteEvaluator, tuple, node);
+            evaluateIfNecessary(handle, valueResolver, tuple, node);
             return;
         }
-        ensureBranchEvaluation(handle, reteEvaluator, tuple, ((BooleanNode)node).getLeft());
-        ensureBranchEvaluation(handle, reteEvaluator, tuple, ((BooleanNode)node).getRight());
+        ensureBranchEvaluation(handle, valueResolver, tuple, ((BooleanNode)node).getLeft());
+        ensureBranchEvaluation(handle, valueResolver, tuple, ((BooleanNode)node).getRight());
     }
 
-    private void ensureBranchEvaluation(InternalFactHandle handle, ReteEvaluator reteEvaluator, Tuple tuple, ASTNode node) {
-        evaluateIfNecessary( handle, reteEvaluator, tuple, node );
-        ensureCompleteEvaluation(node, handle, reteEvaluator, tuple);
+    private void ensureBranchEvaluation(FactHandle handle, ValueResolver valueResolver, BaseTuple tuple, ASTNode node) {
+        evaluateIfNecessary( handle, valueResolver, tuple, node );
+        ensureCompleteEvaluation(node, handle, valueResolver, tuple);
     }
 
-    private void evaluateIfNecessary( InternalFactHandle handle, ReteEvaluator reteEvaluator, Tuple tuple, ASTNode node ) {
+    private void evaluateIfNecessary(FactHandle handle, ValueResolver valueResolver, BaseTuple tuple, ASTNode node ) {
         if (!isEvaluated(node)) {
             ASTNode next = node.nextASTNode;
             node.nextASTNode = null;
-            evaluate( createMvelEvaluator(evaluator, asCompiledExpression(node) ), handle, reteEvaluator, tuple);
+            evaluate( createMvelEvaluator(evaluator, asCompiledExpression(node) ), handle, valueResolver, tuple);
             node.nextASTNode = next;
         }
     }

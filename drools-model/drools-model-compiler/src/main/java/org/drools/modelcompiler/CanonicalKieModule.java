@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler;
 
 import java.io.File;
@@ -38,6 +40,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.factmodel.GeneratedFact;
+import org.drools.base.util.Drools;
 import org.drools.compiler.builder.DroolsAssemblerContext;
 import org.drools.compiler.builder.impl.KnowledgeBuilderConfigurationImpl;
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
@@ -59,17 +64,14 @@ import org.drools.compiler.kie.util.KieJarChangeSet;
 import org.drools.compiler.kproject.models.KieBaseModelImpl;
 import org.drools.compiler.kproject.models.KieModuleModelImpl;
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.factmodel.GeneratedFact;
 import org.drools.core.reteoo.CoreComponentFactory;
-import org.drools.core.util.Drools;
+import org.drools.io.InternalResource;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.model.Model;
 import org.drools.model.NamedModelItem;
 import org.drools.util.IoUtils;
 import org.drools.util.PortablePath;
 import org.drools.util.StringUtils;
-import org.drools.io.InternalResource;
 import org.drools.wiring.api.ResourceProvider;
 import org.drools.wiring.api.classloader.ProjectClassLoader;
 import org.kie.api.KieBaseConfiguration;
@@ -79,7 +81,6 @@ import org.kie.api.builder.ReleaseId;
 import org.kie.api.builder.Results;
 import org.kie.api.builder.model.KieBaseModel;
 import org.kie.api.builder.model.KieModuleModel;
-import org.kie.api.KieBaseConfiguration;
 import org.kie.api.definition.KiePackage;
 import org.kie.api.definition.process.Process;
 import org.kie.api.internal.utils.KieService;
@@ -284,7 +285,7 @@ public class CanonicalKieModule implements InternalKieModule {
         compositeUpdater.run();
     }
 
-    private void registerNonNativeResources( KieBaseModelImpl kBaseModel, KieProject kieProject, InternalKnowledgeBase kieBase, BuildContext buildContext ) {
+    private void registerNonNativeResources(KieBaseModelImpl kBaseModel, KieProject kieProject, InternalKnowledgeBase kieBase, BuildContext buildContext) {
         KnowledgeBuilder kbuilder = getKnowledgeBuilderForKieBase(kBaseModel.getName());
         if (kbuilder == null) {
             kbuilder = kieProject.buildKnowledgePackages(kBaseModel, buildContext, NON_MODEL_RESOURCES);

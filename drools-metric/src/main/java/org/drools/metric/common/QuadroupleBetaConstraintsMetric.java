@@ -1,29 +1,31 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.metric.common;
 
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.QuadroupleBetaConstraints;
-import org.drools.core.rule.ContextEntry;
-import org.drools.core.rule.MutableTypeConstraint;
-import org.drools.core.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.ContextEntry;
+import org.drools.base.rule.MutableTypeConstraint;
+import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
 import org.drools.core.reteoo.Tuple;
 import org.drools.metric.util.MetricLogUtils;
+import org.kie.api.runtime.rule.FactHandle;
 import org.kie.internal.conf.IndexPrecedenceOption;
 
 public class QuadroupleBetaConstraintsMetric extends QuadroupleBetaConstraints {
@@ -65,7 +67,7 @@ public class QuadroupleBetaConstraintsMetric extends QuadroupleBetaConstraints {
 
     @Override
     public boolean isAllowedCachedLeft(final ContextEntry[] context,
-                                       final InternalFactHandle handle) {
+                                       final FactHandle handle) {
         MetricLogUtils.getInstance().incrementEvalCount();
         return super.isAllowedCachedLeft(context, handle);
     }

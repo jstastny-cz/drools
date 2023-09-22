@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator;
 
 import java.util.ArrayList;
@@ -44,12 +46,12 @@ import org.drools.compiler.builder.impl.BuildResultCollector;
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
 import org.drools.compiler.builder.impl.TypeDeclarationContext;
 import org.drools.compiler.compiler.DescrBuildError;
-import org.drools.core.base.CoreComponentsBuilder;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.factmodel.AnnotationDefinition;
-import org.drools.core.rule.Behavior;
-import org.drools.core.time.TimeUtils;
+import org.drools.base.base.CoreComponentsBuilder;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.factmodel.AnnotationDefinition;
+import org.drools.core.rule.BehaviorRuntime;
+import org.drools.base.time.TimeUtils;
 import org.drools.drl.ast.descr.AndDescr;
 import org.drools.drl.ast.descr.AnnotationDescr;
 import org.drools.drl.ast.descr.AttributeDescr;
@@ -528,11 +530,11 @@ public class ModelGenerator {
         } );
         for ( BehaviorDescr behaviorDescr : declaration.getBehaviors() ) {
             MethodCallExpr windowCall = createDslTopLevelMethod(WINDOW_CALL);
-            if ( Behavior.BehaviorType.TIME_WINDOW.matches(behaviorDescr.getSubType() ) ) {
+            if ( BehaviorRuntime.BehaviorType.TIME_WINDOW.matches(behaviorDescr.getSubType()) ) {
                 windowCall.addArgument( "org.drools.model.Window.Type.TIME" );
                 windowCall.addArgument( "" + TimeUtils.parseTimeString(behaviorDescr.getParameters().get(0 ) ) );
             }
-            if ( Behavior.BehaviorType.LENGTH_WINDOW.matches( behaviorDescr.getSubType() ) ) {
+            if ( BehaviorRuntime.BehaviorType.LENGTH_WINDOW.matches(behaviorDescr.getSubType()) ) {
                 windowCall.addArgument( "org.drools.model.Window.Type.LENGTH" );
                 windowCall.addArgument( "" + Integer.valueOf( behaviorDescr.getParameters().get( 0 ) ) );
             }

@@ -1,26 +1,28 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.accessors;
 
 import java.lang.reflect.Method;
 
-import org.drools.core.base.BaseClassFieldReader;
-import org.drools.core.base.ValueType;
-import org.drools.core.common.ReteEvaluator;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.BaseClassFieldReader;
+import org.drools.base.base.ValueType;
 
 public abstract class BaseNumberClassFieldReader extends BaseClassFieldReader {
 
@@ -38,75 +40,75 @@ public abstract class BaseNumberClassFieldReader extends BaseClassFieldReader {
                valueType );
     }
 
-    public abstract Object getValue(ReteEvaluator reteEvaluator,
+    public abstract Object getValue(ValueResolver valueResolver,
                                     Object object);
 
-    public boolean getBooleanValue(ReteEvaluator reteEvaluator,
+    public boolean getBooleanValue(ValueResolver valueResolver,
                                    final Object object) {
         throw new RuntimeException( "Conversion to boolean not supported from Number" );
     }
 
-    public byte getByteValue(ReteEvaluator reteEvaluator,
+    public byte getByteValue(final ValueResolver valueResolver,
                              final Object object) {
-        final Object value = getValue( reteEvaluator,
+        final Object value = getValue( valueResolver,
                                        object );
         
         return ((Number) value).byteValue();
     }
 
-    public char getCharValue(ReteEvaluator reteEvaluator,
+    public char getCharValue(final ValueResolver valueResolver,
                              final Object object) {
-        final Object value = getValue( reteEvaluator,
+        final Object value = getValue( valueResolver,
                                        object );
         
         return ((Character) value).charValue();
     }
 
-    public double getDoubleValue(ReteEvaluator reteEvaluator,
+    public double getDoubleValue(final ValueResolver valueResolver,
                                  final Object object) {
-        final Object value = getValue( reteEvaluator,
+        final Object value = getValue( valueResolver,
                                        object );
         
         return ((Number) value).doubleValue();
     }
 
-    public float getFloatValue(ReteEvaluator reteEvaluator,
+    public float getFloatValue(final ValueResolver valueResolver,
                                final Object object) {
-        final Object value = getValue( reteEvaluator,
+        final Object value = getValue( valueResolver,
                                        object );
         
         return ((Number) value).floatValue();
     }
 
-    public int getIntValue(ReteEvaluator reteEvaluator,
+    public int getIntValue(final ValueResolver valueResolver,
                            final Object object) {
-        final Object value = getValue( reteEvaluator,
+        final Object value = getValue( valueResolver,
                                        object );
         
         return ((Number) value).intValue();
     }
 
-    public long getLongValue(ReteEvaluator reteEvaluator,
+    public long getLongValue(final ValueResolver valueResolver,
                              final Object object) {
-        final Object value = getValue( reteEvaluator,
+        final Object value = getValue( valueResolver,
                                        object );
         
         return ((Number) value).longValue();
     }
 
-    public short getShortValue(ReteEvaluator reteEvaluator,
+    public short getShortValue(final ValueResolver valueResolver,
                                final Object object) {
-        final Object value = getValue( reteEvaluator,
+        final Object value = getValue( valueResolver,
                                        object );
         return ((Number) value).shortValue();
     }
 
-    public boolean isNullValue(ReteEvaluator reteEvaluator,
+    public boolean isNullValue(final ValueResolver valueResolver,
                                final Object object) {
         if ( object == null ) {
             return true;
         } else {
-            return getValue( reteEvaluator,
+            return getValue( valueResolver,
                              object ) == null;
         }
     }
@@ -114,7 +116,7 @@ public abstract class BaseNumberClassFieldReader extends BaseClassFieldReader {
     public Method getNativeReadMethod() {
         try {
             return this.getClass().getMethod(getNativeReadMethodName(),
-                                             ReteEvaluator.class, Object.class);
+                                             ValueResolver.class, Object.class);
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report to development team: " + e.getMessage(),
                                         e );
@@ -129,9 +131,9 @@ public abstract class BaseNumberClassFieldReader extends BaseClassFieldReader {
         return "get" + type.getName().substring(0, 1).toUpperCase() + type.getName().substring(1) + "Value";
     }
 
-    public int getHashCode(ReteEvaluator reteEvaluator,
+    public int getHashCode(final ValueResolver valueResolver,
                            final Object object) {
-        final Object value = getValue( reteEvaluator,
+        final Object value = getValue( valueResolver,
                                        object );
         return (value != null) ? value.hashCode() : 0;
     }

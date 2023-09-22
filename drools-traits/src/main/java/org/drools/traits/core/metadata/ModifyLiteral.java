@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.traits.core.metadata;
 
 import java.io.Serializable;
@@ -21,13 +24,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.drools.core.reteoo.PropertySpecificUtil;
-import org.drools.core.util.PropertyReactivityUtil;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.base.reteoo.PropertySpecificUtil;
+import org.drools.base.util.PropertyReactivityUtil;
+import org.drools.util.bitmask.BitMask;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.traits.core.factmodel.TraitProxyImpl;
 
-import static org.drools.core.reteoo.PropertySpecificUtil.setPropertyOnMask;
+import static org.drools.base.reteoo.PropertySpecificUtil.setPropertyOnMask;
 
 public abstract class ModifyLiteral<T> extends AbstractWMTask<T> implements Modify<T>, Serializable {
     private T target;
@@ -114,14 +117,14 @@ public abstract class ModifyLiteral<T> extends AbstractWMTask<T> implements Modi
         return target;
     }
 
-    public T call( InternalKnowledgeBase knowledgeBase ) {
+    public T call( InternalKnowledgeBase knowledgeBase) {
         computeModificationMasks( knowledgeBase );
         task.call( target );
         return target;
     }
 
 
-    protected void computeModificationMasks( InternalKnowledgeBase knowledgeBase ) {
+    protected void computeModificationMasks( InternalKnowledgeBase knowledgeBase) {
         List<String> settableProperties = getAccessibleProperties( target, knowledgeBase );
         modificationMask = PropertySpecificUtil.getEmptyPropertyReactiveMask( settableProperties.size() );
 
@@ -140,7 +143,7 @@ public abstract class ModifyLiteral<T> extends AbstractWMTask<T> implements Modi
     }
 
 
-    protected List<String> getAccessibleProperties( Object o, InternalKnowledgeBase knowledgeBase ) {
+    protected List<String> getAccessibleProperties( Object o, InternalKnowledgeBase knowledgeBase) {
         if ( knowledgeBase != null ) {
             return PropertySpecificUtil.getAccessibleProperties( knowledgeBase, o.getClass() );
         } else {

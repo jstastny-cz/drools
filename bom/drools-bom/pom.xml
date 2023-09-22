@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.kie</groupId>
     <artifactId>kie-core-bom</artifactId>
-    <version>8.40.0-SNAPSHOT</version>
+    <version>8.45.0-SNAPSHOT</version>
     <relativePath>../kie-core-bom/pom.xml</relativePath>
   </parent>
 
@@ -206,6 +206,26 @@
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
+
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-base</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-base</artifactId>
+        <version>${project.version}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-base</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
       <dependency>
         <groupId>org.drools</groupId>
         <artifactId>drools-drl-ast</artifactId>
@@ -274,6 +294,24 @@
       <dependency>
         <groupId>org.drools</groupId>
         <artifactId>drools-reliability-infinispan</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-reliability-h2mvstore</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-reliability-h2mvstore</artifactId>
+        <version>${project.version}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-reliability-h2mvstore</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>

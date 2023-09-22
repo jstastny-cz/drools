@@ -1,14 +1,32 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.base;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.LeftTupleNode;
 import org.drools.core.reteoo.QueryTerminalNode;
+import org.kie.api.runtime.rule.FactHandle;
 
 public abstract class AbstractQueryViewListener implements InternalViewChangedEventListener {
 
@@ -22,28 +40,28 @@ public abstract class AbstractQueryViewListener implements InternalViewChangedEv
         return this.results;
     }
 
-    public abstract InternalFactHandle getHandle(InternalFactHandle originalHandle);
+    public abstract FactHandle getHandle(FactHandle originalHandle);
 
     public void rowAdded(RuleImpl rule, LeftTuple tuple, ReteEvaluator reteEvaluator) {
-        InternalFactHandle[] handles = new InternalFactHandle[((LeftTupleNode)tuple.getTupleSink()).getObjectCount()];
+        FactHandle[] handles = new FactHandle[((LeftTupleNode)tuple.getTupleSink()).getObjectCount()];
         LeftTuple entry = (LeftTuple) tuple.skipEmptyHandles();
 
         // Add all the FactHandles
         int i = handles.length-1;
         while ( entry != null ) {
-            InternalFactHandle handle = entry.getFactHandle();
+            FactHandle handle = entry.getFactHandle();
             handles[i--] = getHandle(handle);
             entry = entry.getParent();
         }
 
-        QueryTerminalNode node = tuple.getTupleSink();
+        QueryTerminalNode node = (QueryTerminalNode) tuple.getTupleSink();
         this.results.add( new QueryRowWithSubruleIndex(handles, node.getSubruleIndex()) );
     }
 
-    public void rowRemoved( RuleImpl rule, LeftTuple tuple, ReteEvaluator reteEvaluator ) {
+    public void rowRemoved(RuleImpl rule, LeftTuple tuple, ReteEvaluator reteEvaluator ) {
     }
 
-    public void rowUpdated( RuleImpl rule, LeftTuple tuple, ReteEvaluator reteEvaluator ) {
+    public void rowUpdated(RuleImpl rule, LeftTuple tuple, ReteEvaluator reteEvaluator ) {
     }
 
 }

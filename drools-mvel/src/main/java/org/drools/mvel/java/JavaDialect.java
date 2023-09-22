@@ -1,17 +1,21 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.java;
 
 import java.io.File;
@@ -39,6 +43,7 @@ import org.drools.compiler.compiler.Dialect;
 import org.drools.compiler.compiler.PackageRegistry;
 import org.drools.compiler.kie.builder.impl.CompilationProblemAdapter;
 import org.drools.compiler.kie.builder.impl.InternalKieModule.CompilationCacheEntry;
+import org.drools.compiler.rule.builder.GroupByBuilder;
 import org.drools.drl.ast.descr.AccumulateDescr;
 import org.drools.drl.ast.descr.AndDescr;
 import org.drools.drl.ast.descr.BaseDescr;
@@ -50,6 +55,7 @@ import org.drools.drl.ast.descr.ExistsDescr;
 import org.drools.drl.ast.descr.ForallDescr;
 import org.drools.drl.ast.descr.FromDescr;
 import org.drools.drl.ast.descr.FunctionDescr;
+import org.drools.drl.ast.descr.GroupByDescr;
 import org.drools.drl.ast.descr.ImportDescr;
 import org.drools.drl.ast.descr.NamedConsequenceDescr;
 import org.drools.drl.ast.descr.NotDescr;
@@ -84,14 +90,14 @@ import org.drools.compiler.rule.builder.SalienceBuilder;
 import org.drools.compiler.rule.builder.WindowReferenceBuilder;
 import org.drools.compiler.rule.builder.dialect.DialectUtil;
 import org.drools.util.TypeResolver;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.io.InternalResource;
-import org.drools.core.rule.Function;
+import org.drools.base.rule.Function;
 import org.drools.core.rule.JavaDialectRuntimeData;
-import org.drools.core.rule.LineMappings;
-import org.drools.core.definitions.rule.impl.QueryImpl;
-import org.drools.core.rule.accessor.Wireable;
+import org.drools.base.rule.LineMappings;
+import org.drools.base.definitions.rule.impl.QueryImpl;
+import org.drools.base.rule.accessor.Wireable;
 import org.drools.util.IoUtils;
 import org.drools.util.StringUtils;
 import org.drools.mvel.asm.ASMConsequenceStubBuilder;
@@ -123,6 +129,8 @@ public class JavaDialect implements Dialect {
     protected static final SalienceBuilder SALIENCE_BUILDER = new MVELSalienceBuilder();
     protected static final EnabledBuilder ENABLED_BUILDER = new MVELEnabledBuilder();
     protected static final JavaAccumulateBuilder ACCUMULATE_BUILDER = new JavaAccumulateBuilder();
+
+    protected static final JavaGroupByBuilder GROUP_BY_BUILDER = new JavaGroupByBuilder();
 
     protected static final RuleConditionBuilder EVAL_BUILDER = new ASMEvalStubBuilder();
     protected static final PredicateBuilder PREDICATE_BUILDER = new ASMPredicateStubBuilder();
@@ -241,6 +249,9 @@ public class JavaDialect implements Dialect {
         builders.put(AccumulateDescr.class,
                      ACCUMULATE_BUILDER);
 
+        builders.put(GroupByDescr.class,
+                     GROUP_BY_BUILDER);
+
         builders.put(EvalDescr.class,
                      EVAL_BUILDER);
 
@@ -358,6 +369,10 @@ public class JavaDialect implements Dialect {
 
     public AccumulateBuilder getAccumulateBuilder() {
         return ACCUMULATE_BUILDER;
+    }
+
+    public GroupByBuilder getGroupByBuilder() {
+        return GROUP_BY_BUILDER;
     }
 
     public RuleConditionBuilder getEvalBuilder() {

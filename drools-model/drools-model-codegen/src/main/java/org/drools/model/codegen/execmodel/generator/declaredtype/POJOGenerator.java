@@ -1,20 +1,21 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator.declaredtype;
 
 import java.util.Arrays;
@@ -37,9 +38,9 @@ import org.drools.drl.ast.descr.PackageDescr;
 import org.drools.drl.ast.descr.TypeDeclarationDescr;
 import org.drools.compiler.rule.builder.ConstraintBuilder;
 import org.drools.util.TypeResolver;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.factmodel.AccessibleFact;
-import org.drools.core.factmodel.GeneratedFact;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.factmodel.AccessibleFact;
+import org.drools.base.factmodel.GeneratedFact;
 import org.drools.model.codegen.execmodel.GeneratedClassWithPackage;
 import org.drools.model.codegen.execmodel.PackageModel;
 import org.drools.model.codegen.execmodel.errors.DuplicatedDeclarationError;
@@ -47,7 +48,7 @@ import org.drools.model.codegen.execmodel.errors.InvalidExpressionErrorResult;
 import org.drools.model.codegen.execmodel.generator.declaredtype.generator.GeneratedClassDeclaration;
 import org.kie.internal.builder.KnowledgeBuilderResult;
 
-import static org.drools.core.util.Drools.hasMvel;
+import static org.drools.base.util.Drools.hasMvel;
 import static org.drools.model.codegen.execmodel.JavaParserCompiler.compileAll;
 import static org.drools.model.codegen.execmodel.generator.DrlxParseUtil.toStringLiteral;
 import static org.drools.model.codegen.execmodel.generator.DslMethodNames.ADD_ANNOTATION_CALL;

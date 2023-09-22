@@ -1,25 +1,28 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.core.phreak;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.drools.core.common.NetworkNode;
-import org.drools.core.impl.RuleBase;
+import org.drools.base.common.NetworkNode;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.AsyncReceiveNode;
 import org.drools.core.reteoo.AsyncSendNode;
 import org.drools.core.reteoo.BetaNode;
@@ -32,7 +35,7 @@ import org.drools.core.reteoo.LeftTupleNode;
 import org.drools.core.reteoo.LeftTupleSinkNode;
 import org.drools.core.reteoo.LeftTupleSinkPropagator;
 import org.drools.core.reteoo.LeftTupleSource;
-import org.drools.core.reteoo.NodeTypeEnums;
+import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.core.reteoo.NotNode;
 import org.drools.core.reteoo.PathEndNode;
 import org.drools.core.reteoo.PathEndNode.PathMemSpec;
@@ -116,7 +119,7 @@ public class BuildtimeSegmentUtilities {
         return allLinkedMaskTest;
     }
 
-    public static SegmentPrototype[] createPathProtoMemories(TerminalNode tn, TerminalNode removingTn, RuleBase rbase) {
+    public static SegmentPrototype[] createPathProtoMemories(TerminalNode tn, TerminalNode removingTn, InternalRuleBase rbase) {
         // Will initialise all segments in a path
         SegmentPrototype[] smems = createLeftTupleNodeProtoMemories(tn, removingTn, rbase);
 
@@ -128,7 +131,7 @@ public class BuildtimeSegmentUtilities {
         return smems;
     }
 
-    public static SegmentPrototype[] createLeftTupleNodeProtoMemories(LeftTupleNode lts, TerminalNode removingTn, RuleBase rbase) {
+    public static SegmentPrototype[] createLeftTupleNodeProtoMemories(LeftTupleNode lts, TerminalNode removingTn, InternalRuleBase rbase) {
         LeftTupleNode segmentRoot = lts;
         LeftTupleNode segmentTip = lts;
         List<SegmentPrototype> smems = new ArrayList<>();
@@ -187,7 +190,7 @@ public class BuildtimeSegmentUtilities {
     /**
      * Initialises the NodeSegment memory for all nodes in the segment.
      */
-    public static SegmentPrototype createSegmentMemory(LeftTupleNode segmentRoot, LeftTupleNode segmentTip, int recordBefore, TerminalNode removingTn, RuleBase rbase) {
+    public static SegmentPrototype createSegmentMemory(LeftTupleNode segmentRoot, LeftTupleNode segmentTip, int recordBefore, TerminalNode removingTn, InternalRuleBase rbase) {
         LeftTupleNode node = segmentRoot;
         int nodeTypesInSegment = 0;
 
@@ -351,7 +354,7 @@ public class BuildtimeSegmentUtilities {
     }
 
     private static long processBetaNode(BetaNode betaNode, SegmentPrototype smem, List<MemoryPrototype> memories, List<LeftTupleNode> nodes,
-                                        long nodePosMask, long allLinkedTestMask, boolean updateNodeBit, TerminalNode removingTn, RuleBase rbase) {
+                                        long nodePosMask, long allLinkedTestMask, boolean updateNodeBit, TerminalNode removingTn, InternalRuleBase rbase) {
         RightInputAdapterNode riaNode = null;
         if (betaNode.isRightInputIsRiaNode()) {
             // there is a subnetwork, so create all it's segment memory prototypes

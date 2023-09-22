@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.traits.core.base;
 
 import java.io.Externalizable;
@@ -37,29 +40,29 @@ import org.drools.kiesession.entrypoints.NamedEntryPoint;
 import org.drools.core.common.ObjectStore;
 import org.drools.core.common.ObjectTypeConfigurationRegistry;
 import org.drools.core.common.TruthMaintenanceSystemFactory;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.factmodel.ClassDefinition;
-import org.drools.core.factmodel.traits.CoreWrapper;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.factmodel.ClassDefinition;
+import org.drools.base.factmodel.traits.CoreWrapper;
 import org.drools.core.reteoo.RuntimeComponentFactory;
 import org.drools.traits.core.factmodel.LogicalTypeInconsistencyException;
-import org.drools.core.factmodel.traits.Thing;
+import org.drools.base.factmodel.traits.Thing;
 import org.drools.traits.core.factmodel.TraitFactoryImpl;
-import org.drools.core.factmodel.traits.TraitFieldTMS;
+import org.drools.base.factmodel.traits.TraitFieldTMS;
 import org.drools.traits.core.factmodel.TraitProxyImpl;
 import org.drools.traits.core.factmodel.TraitRegistryImpl;
-import org.drools.core.factmodel.traits.TraitType;
+import org.drools.base.factmodel.traits.TraitType;
 import org.drools.traits.core.factmodel.TraitTypeMapImpl;
-import org.drools.core.factmodel.traits.TraitableBean;
+import org.drools.base.factmodel.traits.TraitableBean;
 import org.drools.traits.core.metadata.Metadatable;
 import org.drools.traits.core.metadata.Modify;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.reteoo.TerminalNode;
-import org.drools.core.rule.TypeDeclaration;
+import org.drools.base.rule.TypeDeclaration;
 import org.drools.core.common.PropagationContext;
 import org.drools.traits.core.factmodel.HierarchyEncoder;
-import org.drools.core.util.bitmask.BitMask;
-import org.drools.core.beliefsystem.Mode;
+import org.drools.util.bitmask.BitMask;
+import org.drools.base.beliefsystem.Mode;
 import org.drools.traits.core.reteoo.TraitRuntimeComponentFactory;
 import org.kie.api.runtime.rule.EntryPoint;
 import org.kie.api.runtime.rule.FactHandle;
@@ -67,7 +70,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.drools.traits.core.base.TraitUtils.supersetOrEqualset;
-import static org.drools.core.reteoo.PropertySpecificUtil.onlyTraitBitSetMask;
+import static org.drools.base.reteoo.PropertySpecificUtil.onlyTraitBitSetMask;
 
 public class TraitHelperImpl implements Externalizable,
                                         TraitHelper {

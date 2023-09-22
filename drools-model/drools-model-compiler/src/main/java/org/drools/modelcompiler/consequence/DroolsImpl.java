@@ -1,28 +1,30 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler.consequence;
 
+import org.drools.base.base.ValueResolver;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.reteoo.BaseTuple;
 import org.drools.core.WorkingMemory;
-import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemoryEntryPoint;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.TerminalNode;
-import org.drools.core.reteoo.Tuple;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.model.BitMask;
@@ -44,8 +46,8 @@ public class DroolsImpl implements Drools, org.kie.api.runtime.rule.RuleContext 
 
     private final FactHandleLookup fhLookup;
 
-    DroolsImpl(KnowledgeHelper knowledgeHelper, ReteEvaluator reteEvaluator, FactHandleLookup fhLookup) {
-        this.reteEvaluator = reteEvaluator;
+    DroolsImpl(KnowledgeHelper knowledgeHelper, ValueResolver valueResolver, FactHandleLookup fhLookup) {
+        this.reteEvaluator = (ReteEvaluator) valueResolver;
         this.knowledgeHelper = knowledgeHelper;
         this.fhLookup = fhLookup;
     }
@@ -73,7 +75,7 @@ public class DroolsImpl implements Drools, org.kie.api.runtime.rule.RuleContext 
 
     @Override
     public RuleImpl getRule() {
-        return knowledgeHelper.getRule();
+        return (RuleImpl) knowledgeHelper.getRule();
     }
 
     @Override
@@ -112,12 +114,12 @@ public class DroolsImpl implements Drools, org.kie.api.runtime.rule.RuleContext 
 
     @Override
     public void update(Object object, String... modifiedProperties) {
-        org.drools.core.util.bitmask.BitMask mask = calculateUpdateBitMask(reteEvaluator.getKnowledgeBase(), object, modifiedProperties);
+        org.drools.util.bitmask.BitMask mask = calculateUpdateBitMask(reteEvaluator.getKnowledgeBase(), object, modifiedProperties);
         knowledgeHelper.update( getFactHandleForObject( object ), mask, object.getClass() );
     }
 
-    private InternalFactHandle getFactHandleForObject( Object object ) {
-        InternalFactHandle fh = fhLookup.get(object);
+    private FactHandle getFactHandleForObject( Object object ) {
+        FactHandle fh = fhLookup.get(object);
         return fh != null ? fh : reteEvaluator.getFactHandle( object );
     }
 
@@ -191,7 +193,7 @@ public class DroolsImpl implements Drools, org.kie.api.runtime.rule.RuleContext 
         return knowledgeHelper.getWorkingMemory();
     }
 
-    public Tuple getTuple() {
+    public BaseTuple getTuple() {
         return knowledgeHelper.getTuple();
     }
 }

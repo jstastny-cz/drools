@@ -1,17 +1,21 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel;
 
 import java.io.IOException;
@@ -29,6 +33,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.drools.base.base.DroolsQuery;
+import org.drools.base.base.ValueResolver;
 import org.drools.compiler.builder.impl.KnowledgeBuilderConfigurationImpl;
 import org.drools.compiler.builder.impl.KnowledgeBuilderRulesConfigurationImpl;
 import org.drools.compiler.compiler.AnalysisResult;
@@ -40,9 +46,11 @@ import org.drools.compiler.kie.util.BeanCreator;
 import org.drools.compiler.rule.builder.ConstraintBuilder;
 import org.drools.compiler.rule.builder.PatternBuilder;
 import org.drools.compiler.rule.builder.RuleBuildContext;
-import org.drools.core.base.ClassObjectType;
-import org.drools.core.base.DroolsQuery;
+import org.drools.base.base.ClassObjectType;
 import org.drools.compiler.rule.builder.EvaluatorWrapper;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.reteoo.SortDeclarations;
+import org.drools.base.util.index.ConstraintTypeOperator;
 import org.drools.mvel.evaluators.AfterEvaluatorDefinition;
 import org.drools.mvel.evaluators.BeforeEvaluatorDefinition;
 import org.drools.mvel.evaluators.CoincidesEvaluatorDefinition;
@@ -58,25 +66,21 @@ import org.drools.mvel.evaluators.StartedByEvaluatorDefinition;
 import org.drools.mvel.evaluators.StartsEvaluatorDefinition;
 import org.drools.mvel.evaluators.StrEvaluatorDefinition;
 import org.drools.mvel.field.FieldFactory;
-import org.drools.core.base.ValueType;
+import org.drools.base.base.ValueType;
 import org.drools.compiler.rule.builder.EvaluatorDefinition;
 import org.drools.drl.parser.impl.Operator;
 import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.reteoo.LeftTuple;
-import org.drools.core.reteoo.RuleTerminalNode;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.QueryArgument;
-import org.drools.core.rule.constraint.Constraint;
-import org.drools.core.rule.accessor.DeclarationScopeResolver;
-import org.drools.core.rule.accessor.Evaluator;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.QueryArgument;
+import org.drools.base.rule.constraint.Constraint;
+import org.drools.base.rule.accessor.DeclarationScopeResolver;
+import org.drools.base.rule.accessor.Evaluator;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.core.rule.consequence.KnowledgeHelper;
-import org.drools.core.base.ObjectType;
+import org.drools.base.base.ObjectType;
 import org.drools.core.time.TimerExpression;
-import org.drools.core.util.index.IndexUtil;
 import org.drools.drl.ast.descr.BaseDescr;
 import org.drools.drl.ast.descr.BindingDescr;
 import org.drools.drl.ast.descr.LiteralRestrictionDescr;
@@ -197,14 +201,14 @@ public class MVELConstraintBuilder implements ConstraintBuilder {
         }
 
         boolean isUnification = requiredDeclaration != null &&
-                                requiredDeclaration.getPattern().getObjectType().equals( new ClassObjectType( DroolsQuery.class ) ) &&
+                                requiredDeclaration.getPattern().getObjectType().equals( new ClassObjectType( DroolsQuery.class )) &&
                                 Operator.BuiltInOperator.EQUAL.getSymbol().equals( operatorDescr.getOperator() );
         if (isUnification && leftValue.equals(rightValue)) {
             expression = resolveUnificationAmbiguity(declarations, leftValue, rightValue);
         }
 
         expression = normalizeMVELVariableExpression(expression, leftValue, rightValue, relDescr);
-        IndexUtil.ConstraintType constraintType = IndexUtil.ConstraintType.decode(operatorDescr.getOperator(), operatorDescr.isNegated());
+        ConstraintTypeOperator constraintType = ConstraintTypeOperator.decode(operatorDescr.getOperator(), operatorDescr.isNegated());
         MVELCompilationUnit compilationUnit = isUnification ? null : buildCompilationUnit(context, pattern, expression, aliases);
         EvaluatorWrapper[] operators = getOperators(buildOperators(context, pattern, relDescr, aliases));
         return new MVELConstraint( Collections.singletonList( context.getPkg().getName() ), expression, declarations, operators, compilationUnit, constraintType, requiredDeclaration, extractor, isUnification);
@@ -253,8 +257,8 @@ public class MVELConstraintBuilder implements ConstraintBuilder {
         }
 
         String mvelExpr = normalizeMVELLiteralExpression(vtype, field, expression, leftValue, operator, rightValue, negated, restrictionDescr);
-        IndexUtil.ConstraintType constraintType = IndexUtil.ConstraintType.decode(operator, negated);
-        if (constraintType == IndexUtil.ConstraintType.EQUAL && negated) {
+        ConstraintTypeOperator constraintType = ConstraintTypeOperator.decode(operator, negated);
+        if (constraintType == ConstraintTypeOperator.EQUAL && negated) {
             mvelExpr = normalizeDoubleNegation(mvelExpr);
         }
         MVELCompilationUnit compilationUnit = buildCompilationUnit(context, pattern, mvelExpr, aliases);
@@ -297,7 +301,7 @@ public class MVELConstraintBuilder implements ConstraintBuilder {
             if (!negated) {
                 return normalized;
             }
-            IndexUtil.ConstraintType constraintType = IndexUtil.ConstraintType.decode(operator);
+            ConstraintTypeOperator constraintType = ConstraintTypeOperator.decode(operator);
             return constraintType.getOperator() != null ?
                     leftValue + " " + constraintType.negate().getOperator() + getNormalizeDate( vtype, field ) :
                     "!(" + normalized + ")";
@@ -552,7 +556,7 @@ public class MVELConstraintBuilder implements ConstraintBuilder {
             for ( String id :  usedIdentifiers.getDeclrClasses().keySet() ) {
                 previousDeclarations[i++] = decls.get( id );
             }
-            Arrays.sort(previousDeclarations, RuleTerminalNode.SortDeclarations.instance);
+            Arrays.sort(previousDeclarations, SortDeclarations.instance);
 
             MVELCompilationUnit unit = dialect.getMVELCompilationUnit( expression,
                     analysis,
@@ -858,10 +862,10 @@ public class MVELConstraintBuilder implements ConstraintBuilder {
         }
 
         @Override
-        public Object getValue(ReteEvaluator reteEvaluator, LeftTuple leftTuple ) {
+        public Object getValue(ValueResolver valueResolver, BaseTuple tuple) {
             Map<String, Object> vars = new HashMap<>();
             for (Declaration d : declarations) {
-                vars.put(d.getBindingName(), QueryArgument.evaluateDeclaration( reteEvaluator, leftTuple, d ));
+                vars.put(d.getBindingName(), QueryArgument.evaluateDeclaration( valueResolver, tuple, d ));
             }
             return evaluator.evaluate( null, vars );
         }

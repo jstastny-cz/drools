@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.traits.compiler.factmodel.traits;
 
 import java.util.ArrayList;
@@ -24,7 +27,7 @@ import org.drools.traits.compiler.CommonTraitTest;
 import org.drools.core.ClassObjectFilter;
 import org.drools.traits.core.factmodel.TraitableMap;
 import org.drools.traits.core.factmodel.TraitFactoryImpl;
-import org.drools.core.factmodel.traits.Traitable;
+import org.drools.base.factmodel.traits.Traitable;
 import org.drools.traits.core.factmodel.VirtualPropertyMode;
 import org.junit.Test;
 import org.kie.api.runtime.KieSession;
@@ -38,7 +41,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
         String source = "package org.drools.test;\n" +
                         "\n" +
                         "import java.util.*;\n" +
-                        "import org.drools.core.factmodel.traits.Traitable;\n" +
+                        "import org.drools.base.factmodel.traits.Traitable;\n" +
                         "" +
                         "global List list;\n " +
                         "\n" +
@@ -96,7 +99,7 @@ public class TraitMapCoreTest extends CommonTraitTest {
     public void donMapTest() {
         String source = "package org.drools.traits.test; \n" +
                         "import java.util.*\n;" +
-                        "import org.drools.core.factmodel.traits.Traitable;\n" +
+                        "import org.drools.base.factmodel.traits.Traitable;\n" +
                         "" +
                         "global List list; \n" +
                         "" +
@@ -148,10 +151,10 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
     @Test(timeout=10000)
     public void testMapCore2(  ) {
-        String source = "package org.drools.core.factmodel.traits.test;\n" +
+        String source = "package org.drools.base.factmodel.traits.test;\n" +
                         "\n" +
                         "import java.util.*;\n" +
-                        "import org.drools.core.factmodel.traits.Traitable;\n" +
+                        "import org.drools.base.factmodel.traits.Traitable;\n" +
                         "" +
                         "global List list;\n " +
                         "" +
@@ -275,10 +278,10 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
     @Test(timeout=10000)
     public void testMapCoreAliasing(  ) {
-        String source = "package org.drools.core.factmodel.traits.test;\n" +
+        String source = "package org.drools.base.factmodel.traits.test;\n" +
                         "\n" +
                         "import java.util.*;\n" +
-                        "import org.drools.core.factmodel.traits.*;\n" +
+                        "import org.drools.base.factmodel.traits.*;\n" +
                         "" +
                         "global List list;\n " +
                         "" +
@@ -341,10 +344,10 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
     @Test(timeout=10000)
     public void testMapCoreAliasingLogicalTrueWithTypeClash(  ) {
-        String source = "package org.drools.core.factmodel.traits.test;\n" +
+        String source = "package org.drools.base.factmodel.traits.test;\n" +
                         "\n" +
                         "import java.util.*;\n" +
-                        "import org.drools.core.factmodel.traits.*;\n" +
+                        "import org.drools.base.factmodel.traits.*;\n" +
                         "" +
                         "global List list;\n " +
                         "" +
@@ -396,10 +399,10 @@ public class TraitMapCoreTest extends CommonTraitTest {
         String drl = "" +
                 "\n" +
                 "\n" +
-                "package org.drools.core.factmodel.traits.test;\n" +
+                "package org.drools.base.factmodel.traits.test;\n" +
                 "\n" +
                 "import java.util.*;\n" +
-                "import org.drools.core.factmodel.traits.Alias\n" +
+                "import org.drools.base.factmodel.traits.Alias\n" +
                 "\n" +
                 "global java.util.List list;\n" +
                 "\n" +
@@ -485,10 +488,10 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
         String drl = "" +
                 "\n" +
-                "package org.drools.core.factmodel.traits.test;\n" +
+                "package org.drools.base.factmodel.traits.test;\n" +
                 "\n" +
                 "import java.util.*;\n" +
-                "import org.drools.core.factmodel.traits.Alias\n" +
+                "import org.drools.base.factmodel.traits.Alias\n" +
                 "\n" +
                 "global java.util.List list;\n" +
                 "" +
@@ -573,10 +576,10 @@ public class TraitMapCoreTest extends CommonTraitTest {
 
         String drl = "" +
                 "\n" +
-                "package org.drools.core.factmodel.traits.test;\n" +
+                "package org.drools.base.factmodel.traits.test;\n" +
                 "\n" +
                 "import java.util.*;\n" +
-                "import org.drools.core.factmodel.traits.Alias\n" +
+                "import org.drools.base.factmodel.traits.Alias\n" +
                 "\n" +
                 "global java.util.List list;\n" +
                 "\n" +
@@ -695,10 +698,10 @@ public class TraitMapCoreTest extends CommonTraitTest {
         String drl = "" +
                 "\n" +
                 "\n" +
-                "package org.drools.core.factmodel.traits.test;\n" +
+                "package org.drools.base.factmodel.traits.test;\n" +
                 "\n" +
                 "import java.util.*;\n" +
-                "import org.drools.core.factmodel.traits.Alias\n" +
+                "import org.drools.base.factmodel.traits.Alias\n" +
                 "\n" +
                 "global java.util.List list;\n" +
                 "\n" +
@@ -797,11 +800,11 @@ public class TraitMapCoreTest extends CommonTraitTest {
     public void testMapTraitsMismatchTypes()
     {
         String drl = "" +
-                     "package org.drools.core.factmodel.traits;\n" +
+                     "package org.drools.base.factmodel.traits;\n" +
                      "\n" +
-                     "import org.drools.core.factmodel.traits.Traitable;\n" +
-                     "import org.drools.core.factmodel.traits.Trait;\n" +
-                     "import org.drools.core.factmodel.traits.Alias;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n" +
+                     "import org.drools.base.factmodel.traits.Trait;\n" +
+                     "import org.drools.base.factmodel.traits.Alias;\n" +
                      "import java.util.*;\n" +
                      "\n" +
                      "global java.util.List list;\n" +
@@ -860,11 +863,11 @@ public class TraitMapCoreTest extends CommonTraitTest {
     public void testMapTraitNoType()
     {
         String drl = "" +
-                     "package openehr.test;//org.drools.core.factmodel.traits;\n" +
+                     "package openehr.test;//org.drools.base.factmodel.traits;\n" +
                      "\n" +
-                     "import org.drools.core.factmodel.traits.Traitable;\n" +
-                     "import org.drools.core.factmodel.traits.Trait;\n" +
-                     "import org.drools.core.factmodel.traits.Alias;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n" +
+                     "import org.drools.base.factmodel.traits.Trait;\n" +
+                     "import org.drools.base.factmodel.traits.Alias;\n" +
                      "import java.util.*;\n" +
                      "\n" +
                      "global java.util.List list;\n" +
@@ -915,11 +918,11 @@ public class TraitMapCoreTest extends CommonTraitTest {
     public void testMapTraitMismatchTypes()
     {
         String drl = "" +
-                     "package openehr.test;//org.drools.core.factmodel.traits;\n" +
+                     "package openehr.test;//org.drools.base.factmodel.traits;\n" +
                      "\n" +
-                     "import org.drools.core.factmodel.traits.Traitable;\n" +
-                     "import org.drools.core.factmodel.traits.Trait;\n" +
-                     "import org.drools.core.factmodel.traits.Alias;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n" +
+                     "import org.drools.base.factmodel.traits.Trait;\n" +
+                     "import org.drools.base.factmodel.traits.Alias;\n" +
                      "import java.util.*;\n" +
                      "\n" +
                      "global java.util.List list;\n" +
@@ -964,11 +967,11 @@ public class TraitMapCoreTest extends CommonTraitTest {
     public void testMapTraitPossibilities1()
     {
         String drl = "" +
-                     "package openehr.test;//org.drools.core.factmodel.traits;\n" +
+                     "package openehr.test;//org.drools.base.factmodel.traits;\n" +
                      "\n" +
-                     "import org.drools.core.factmodel.traits.Traitable;\n" +
-                     "import org.drools.core.factmodel.traits.Trait;\n" +
-                     "import org.drools.core.factmodel.traits.Alias;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n" +
+                     "import org.drools.base.factmodel.traits.Trait;\n" +
+                     "import org.drools.base.factmodel.traits.Alias;\n" +
                      "import java.util.*;\n" +
                      "\n" +
                      "global java.util.List list;\n" +
@@ -1030,11 +1033,11 @@ public class TraitMapCoreTest extends CommonTraitTest {
     public void testMapTraitPossibilities2()
     {
         String drl = "" +
-                     "package openehr.test;//org.drools.core.factmodel.traits;\n" +
+                     "package openehr.test;//org.drools.base.factmodel.traits;\n" +
                      "\n" +
-                     "import org.drools.core.factmodel.traits.Traitable;\n" +
-                     "import org.drools.core.factmodel.traits.Trait;\n" +
-                     "import org.drools.core.factmodel.traits.Alias;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n" +
+                     "import org.drools.base.factmodel.traits.Trait;\n" +
+                     "import org.drools.base.factmodel.traits.Alias;\n" +
                      "import java.util.*;\n" +
                      "\n" +
                      "global java.util.List list;\n" +
@@ -1102,11 +1105,11 @@ public class TraitMapCoreTest extends CommonTraitTest {
     public void testMapTraitPossibilities3()
     {
         String drl = "" +
-                     "package openehr.test;//org.drools.core.factmodel.traits;\n" +
+                     "package openehr.test;//org.drools.base.factmodel.traits;\n" +
                      "\n" +
-                     "import org.drools.core.factmodel.traits.Traitable;\n" +
-                     "import org.drools.core.factmodel.traits.Trait;\n" +
-                     "import org.drools.core.factmodel.traits.Alias;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n" +
+                     "import org.drools.base.factmodel.traits.Trait;\n" +
+                     "import org.drools.base.factmodel.traits.Alias;\n" +
                      "import java.util.*;\n" +
                      "\n" +
                      "global java.util.List list;\n" +
@@ -1174,11 +1177,11 @@ public class TraitMapCoreTest extends CommonTraitTest {
     public void testMapTraitPossibilities4()
     {
         String drl = "" +
-                     "package openehr.test;//org.drools.core.factmodel.traits;\n" +
+                     "package openehr.test;//org.drools.base.factmodel.traits;\n" +
                      "\n" +
-                     "import org.drools.core.factmodel.traits.Traitable;\n" +
-                     "import org.drools.core.factmodel.traits.Trait;\n" +
-                     "import org.drools.core.factmodel.traits.Alias;\n" +
+                     "import org.drools.base.factmodel.traits.Traitable;\n" +
+                     "import org.drools.base.factmodel.traits.Trait;\n" +
+                     "import org.drools.base.factmodel.traits.Alias;\n" +
                      "import java.util.*;\n" +
                      "\n" +
                      "global java.util.List list;\n" +

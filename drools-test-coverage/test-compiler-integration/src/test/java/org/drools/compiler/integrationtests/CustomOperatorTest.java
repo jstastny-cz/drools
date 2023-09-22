@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests;
 
 import java.io.IOException;
@@ -20,14 +23,13 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Collection;
 
-import org.drools.core.base.ValueType;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.ValueType;
 import org.drools.compiler.rule.builder.EvaluatorDefinition;
 import org.drools.drl.parser.impl.Operator;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.rule.accessor.Evaluator;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
+import org.drools.base.rule.accessor.Evaluator;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.mvel.evaluators.BaseEvaluator;
 import org.drools.mvel.evaluators.VariableRestriction;
 import org.drools.testcoverage.common.model.Address;
@@ -40,6 +42,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.FactHandle;
 import org.kie.internal.builder.conf.EvaluatorOption;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -162,21 +165,21 @@ public class CustomOperatorTest {
             super(type, isNegated ? SupersetOfEvaluatorDefinition.NOT_SUPERSET_OF : SupersetOfEvaluatorDefinition.SUPERSET_OF);
         }
 
-        public boolean evaluate(final ReteEvaluator reteEvaluator, final ReadAccessor extractor, final InternalFactHandle factHandle, final FieldValue value) {
-            final Object objectValue = extractor.getValue(reteEvaluator, factHandle);
+        public boolean evaluate(final ValueResolver valueResolver, final ReadAccessor extractor, final FactHandle factHandle, final FieldValue value) {
+            final Object objectValue = extractor.getValue(valueResolver, factHandle);
             return evaluateAll((Collection) value.getValue(), (Collection) objectValue);
         }
 
-        public boolean evaluate(final ReteEvaluator reteEvaluator, final ReadAccessor ira, final InternalFactHandle left, final ReadAccessor ira1, final InternalFactHandle right) {
+        public boolean evaluate(final ValueResolver valueResolver, final ReadAccessor ira, final FactHandle left, final ReadAccessor ira1, final FactHandle right) {
             return evaluateAll((Collection) left.getObject(), (Collection) right.getObject());
         }
 
-        public boolean evaluateCachedLeft(final ReteEvaluator reteEvaluator, final VariableRestriction.VariableContextEntry context, final InternalFactHandle right) {
-            final Object valRight = context.extractor.getValue(reteEvaluator, right.getObject());
+        public boolean evaluateCachedLeft(final ValueResolver valueResolver, final VariableRestriction.VariableContextEntry context, final FactHandle right) {
+            final Object valRight = context.extractor.getValue(valueResolver, right.getObject());
             return evaluateAll((Collection) ((VariableRestriction.ObjectVariableContextEntry) context).left, (Collection) valRight);
         }
 
-        public boolean evaluateCachedRight(final ReteEvaluator reteEvaluator, final VariableRestriction.VariableContextEntry context, final InternalFactHandle left) {
+        public boolean evaluateCachedRight(final ValueResolver reteEvaluator, final VariableRestriction.VariableContextEntry context, final FactHandle left) {
             final Object varLeft = context.declaration.getExtractor().getValue(reteEvaluator, left);
             return evaluateAll((Collection) varLeft, (Collection) ((VariableRestriction.ObjectVariableContextEntry) context).right);
         }

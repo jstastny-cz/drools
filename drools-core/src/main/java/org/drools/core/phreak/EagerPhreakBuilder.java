@@ -1,41 +1,35 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.phreak;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import org.drools.base.common.NetworkNode;
+import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.core.WorkingMemory;
-import org.drools.core.common.EventFactHandle;
+import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.InternalAgenda;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.Memory;
-import org.drools.core.common.NetworkNode;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.PropagationContextFactory;
 import org.drools.core.common.TupleSets;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.AccumulateNode.AccumulateContext;
 import org.drools.core.reteoo.AccumulateNode.AccumulateMemory;
 import org.drools.core.reteoo.AlphaTerminalNode;
@@ -47,11 +41,9 @@ import org.drools.core.reteoo.LeftInputAdapterNode.RightTupleSinkAdapter;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.LeftTupleNode;
 import org.drools.core.reteoo.LeftTupleSinkNode;
-import org.drools.core.reteoo.NodeTypeEnums;
 import org.drools.core.reteoo.ObjectSink;
 import org.drools.core.reteoo.ObjectSource;
 import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.reteoo.ObjectTypeNode.ObjectTypeNodeMemory;
 import org.drools.core.reteoo.PathEndNode;
 import org.drools.core.reteoo.PathEndNode.PathMemSpec;
 import org.drools.core.reteoo.PathMemory;
@@ -71,6 +63,16 @@ import org.drools.core.util.FastIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import static org.drools.core.phreak.BuildtimeSegmentUtilities.isAssociatedWith;
 
 public class EagerPhreakBuilder implements PhreakBuilder {
@@ -82,7 +84,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
      * For add tuples are processed after the segments and pmems have been adjusted
      */
     @Override
-    public void addRule(TerminalNode tn, Collection<InternalWorkingMemory> wms, RuleBase kBase) {
+    public void addRule(TerminalNode tn, Collection<InternalWorkingMemory> wms, InternalRuleBase kBase) {
         if (log.isTraceEnabled()) {
             log.trace("Adding Rule {}", tn.getRule().getName());
         }
@@ -125,7 +127,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
      * Note the
      */
     @Override
-    public void removeRule(TerminalNode tn, Collection<InternalWorkingMemory> wms, RuleBase kBase) {
+    public void removeRule(TerminalNode tn, Collection<InternalWorkingMemory> wms, InternalRuleBase kBase) {
         if (log.isTraceEnabled()) {
             log.trace("Removing Rule {}", tn.getRule().getName());
         }
@@ -268,7 +270,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
             }
         }
 
-        public static SegmentPrototype processSplit(LeftTupleNode splitNode, RuleBase kbase, Collection<InternalWorkingMemory> wms, Set<SegmentMemoryPair> smemsToNotify) {
+        public static SegmentPrototype processSplit(LeftTupleNode splitNode, InternalRuleBase kbase, Collection<InternalWorkingMemory> wms, Set<SegmentMemoryPair> smemsToNotify) {
             LeftTupleNode segmentRoot = BuildtimeSegmentUtilities.findSegmentRoot(splitNode);
             SegmentPrototype proto1 = kbase.getSegmentPrototype(segmentRoot);
             if ( proto1.getTipNode() != splitNode) {
@@ -390,7 +392,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
             notifyImpactedSegments(sm2, wm, smemsToNotify);
         }
 
-        public static SegmentPrototype splitSegment(SegmentPrototype proto1, LeftTupleNode splitNode, RuleBase kbase, Collection<InternalWorkingMemory> wms, Set<SegmentMemoryPair> smemsToNotify) {
+        public static SegmentPrototype splitSegment(SegmentPrototype proto1, LeftTupleNode splitNode, InternalRuleBase kbase, Collection<InternalWorkingMemory> wms, Set<SegmentMemoryPair> smemsToNotify) {
             boolean proto1WasEager = proto1.requiresEager();
 
             // Create the new segment proto
@@ -529,7 +531,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
 
 
         private static void addNewPaths(List<Pair> exclBranchRoots, TerminalNode tn,
-                                        Collection<InternalWorkingMemory> wms, RuleBase kBase,
+                                        Collection<InternalWorkingMemory> wms, InternalRuleBase kBase,
                                         Set<SegmentMemoryPair> smemsToNotify) {
             // create protos
             BuildtimeSegmentUtilities.createPathProtoMemories(tn, null, kBase);
@@ -619,7 +621,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
     }
 
     public static class Remove {
-        private static void removeExistingPaths(List<Pair> exclBranchRoots, TerminalNode tn, Collection<InternalWorkingMemory> wms, RuleBase kbase) {
+        private static void removeExistingPaths(List<Pair> exclBranchRoots, TerminalNode tn, Collection<InternalWorkingMemory> wms, InternalRuleBase kbase) {
             // update existing SegmentProtos (before removing path branch root) to remove EndNodes
             // for nodes after, just remove them from the cache
             for ( PathEndNode endNode : tn.getPathEndNodes() ) {
@@ -717,7 +719,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
         }
 
 
-        private static void processMerges(LeftTupleNode splitNode, TerminalNode tn, RuleBase kBase, Collection<InternalWorkingMemory> wms, Set<Integer> visited, Set<SegmentMemoryPair> smemsToNotify) {
+        private static void processMerges(LeftTupleNode splitNode, TerminalNode tn, InternalRuleBase kBase, Collection<InternalWorkingMemory> wms, Set<Integer> visited, Set<SegmentMemoryPair> smemsToNotify) {
             // it's possible for a rule to have multiple exclBranches, pointing to the same parent. So need to ensure it's processed once.
             if ( !visited.add(splitNode.getId())) {
                 return;
@@ -753,7 +755,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
             }
         }
 
-        public static void mergeSegments(SegmentPrototype proto1, SegmentPrototype proto2, RuleBase kbase, Collection<InternalWorkingMemory> wms) {
+        public static void mergeSegments(SegmentPrototype proto1, SegmentPrototype proto2, InternalRuleBase kbase, Collection<InternalWorkingMemory> wms) {
             boolean proto2WasEager = proto2.requiresEager();
 
             LeftTupleNode[] origNodes = proto1.getNodesInSegment();
@@ -870,10 +872,10 @@ public class EagerPhreakBuilder implements PhreakBuilder {
 
             sm1.setNodeMemories(mems);
 
-            mergeSegment(sm1, sm2, proto1, origNodes, wm);
+            mergeSegment(sm1, sm2, proto1, origNodes);
         }
 
-        private static void mergeSegment(SegmentMemory sm1, SegmentMemory sm2, SegmentPrototype proto1, LeftTupleNode[] origNodes, InternalWorkingMemory wm) {
+        private static void mergeSegment(SegmentMemory sm1, SegmentMemory sm2, SegmentPrototype proto1, LeftTupleNode[] origNodes) {
             if (sm1.getTipNode().getType() == NodeTypeEnums.LeftInputAdapterNode && !sm2.getStagedLeftTuples().isEmpty()) {
                 // If a rule has not been linked, lia can still have child segments with staged tuples that did not get flushed
                 // these are safe to just move to the parent SegmentMemory
@@ -983,7 +985,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
             if (source instanceof WindowNode) {
                 WindowNode.WindowMemory memory = (WindowNode.WindowMemory) wm.getNodeMemories().peekNodeMemory(source);
                 if (memory != null) {
-                    for (EventFactHandle factHandle : memory.getFactHandles()) {
+                    for (DefaultEventHandle factHandle : memory.getFactHandles()) {
                         factHandle.forEachRightTuple(rt -> {
                             if (source.equals(rt.getTupleSink())) {
                                 rt.unlinkFromRightParent();
@@ -1065,7 +1067,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
                         Tuple lt = BetaNode.getFirstTuple(bm.getLeftTupleMemory(), it);
                         for (; lt != null; lt = (LeftTuple) it.next(lt)) {
                             AccumulateContext accctx = (AccumulateContext) lt.getContextObject();
-                            visitChild(accctx.getResultLeftTuple(), insert, wm, tn);
+                            visitChild((LeftTuple) accctx.getResultLeftTuple(), insert, wm, tn);
                         }
                     } else if (NodeTypeEnums.ExistsNode == node.getType() &&
                                !((BetaNode) node).isRightInputIsRiaNode()) { // do not process exists with subnetworks
@@ -1116,10 +1118,9 @@ public class EagerPhreakBuilder implements PhreakBuilder {
         while (os.getType() != NodeTypeEnums.ObjectTypeNode) {
             os = os.getParentObjectSource();
         }
-        ObjectTypeNode otn  = (ObjectTypeNode) os;
-        final ObjectTypeNodeMemory omem = wm.getNodeMemory(otn); // For some reason cannot move this to peek, as TruthMaintenanceTEst.testLogicalInsertionsDynamicRule fails
 
-        Iterator<InternalFactHandle> it = omem.iterator();
+        ObjectTypeNode otn  = (ObjectTypeNode) os;
+        Iterator<InternalFactHandle> it = otn.getFactHandlesIterator(wm);
         while (it.hasNext()) {
             InternalFactHandle fh = it.next();
             fh.forEachLeftTuple( lt -> {
@@ -1153,7 +1154,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
 
     private static void visitChild(LeftTuple lt, boolean insert, InternalWorkingMemory wm, TerminalNode tn) {
         LeftTuple prevLt = null;
-        LeftTupleSinkNode sink = lt.getTupleSink();
+        LeftTupleSinkNode sink = (LeftTupleSinkNode) lt.getTupleSink();
 
         for ( ; sink != null; sink = sink.getNextLeftTupleSinkNode() ) {
             if ( lt != null ) {
@@ -1192,10 +1193,10 @@ public class EagerPhreakBuilder implements PhreakBuilder {
         }
     }
 
-    private static void insertPeerRightTuple( LeftTuple lt, InternalWorkingMemory wm, TerminalNode tn, boolean insert ) {
+    private static void insertPeerRightTuple(LeftTuple lt, InternalWorkingMemory wm, TerminalNode tn, boolean insert ) {
         // There's a shared RightInputAdapterNode, so check if one of its sinks is associated only to the new rule
         LeftTuple prevLt = null;
-        RightInputAdapterNode rian = lt.getTupleSink();
+        RightInputAdapterNode rian = (RightInputAdapterNode) lt.getTupleSink();
 
         for (ObjectSink sink : rian.getObjectSinkPropagator().getSinks()) {
             if (lt != null) {
@@ -1259,7 +1260,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
             }
         } else {
             if (lt.getContextObject() instanceof AccumulateContext) {
-                LeftTuple resultLt = (( AccumulateContext ) lt.getContextObject()).getResultLeftTuple();
+                LeftTuple resultLt = (LeftTuple) (( AccumulateContext ) lt.getContextObject()).getResultLeftTuple();
                 if (resultLt != null) {
                     iterateLeftTuple( resultLt, wm );
                 }
@@ -1296,7 +1297,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
                 return;
             }
 
-            InternalFactHandle fh = removingLt.getFactHandle();
+            InternalFactHandle fh = (InternalFactHandle) removingLt.getFactHandle();
 
             // This is the first LT in a peer chain. Only this LT is hooked into the left and right parent LT and RT and
             // if it's the root (form the lian) it will be hooked itno the FH.
@@ -1306,7 +1307,7 @@ public class EagerPhreakBuilder implements PhreakBuilder {
             LeftTuple rightPrevious = removingLt.getRightParentPrevious();
             LeftTuple rightNext     = removingLt.getRightParentNext();
 
-            LeftTuple  leftParent  = removingLt.getLeftParent();
+            LeftTuple leftParent  = removingLt.getLeftParent();
             RightTuple rightParent = removingLt.getRightParent();
 
             // This tuple is the first peer and thus is linked into the left parent LT.

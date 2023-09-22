@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.kie.scanner;
 
 import java.io.File;
@@ -28,8 +31,8 @@ import org.drools.compiler.kie.builder.impl.InternalKieModule;
 import org.drools.compiler.kie.builder.impl.KieContainerImpl;
 import org.drools.compiler.kie.builder.impl.KieRepositoryImpl;
 import org.drools.compiler.kie.builder.impl.KieServicesImpl;
-import org.drools.core.factmodel.ClassDefinition;
-import org.drools.core.factmodel.FieldDefinition;
+import org.drools.base.factmodel.ClassDefinition;
+import org.drools.base.factmodel.FieldDefinition;
 import org.drools.mvel.asm.DefaultBeanClassBuilder;
 import org.junit.Test;
 import org.kie.api.KieBase;
@@ -101,10 +104,9 @@ public class KieModuleMavenTest extends AbstractKieCiTest {
             }
         };
 
-        ReleaseId dependency = ks.newReleaseId("org.drools", "drools-core", "5.5.0.Final");
         ReleaseId releaseId = ks.newReleaseId("org.kie", "maven-test", "1.0-SNAPSHOT");
         InternalKieModule kJar1 = createKieJar(ks, releaseId, true, "rule1", "rule2");
-        String pomText = getPom(releaseId, dependency);
+        String pomText = getPom(releaseId, getTestDependencyJarReleaseId());
         File pomFile = new File(System.getProperty("java.io.tmpdir"), MavenRepository.toFileName(releaseId, null) + ".pom");
         try {
             FileOutputStream fos = new FileOutputStream(pomFile);
@@ -133,7 +135,7 @@ public class KieModuleMavenTest extends AbstractKieCiTest {
             }
         };
 
-        ReleaseId dependency = ks.newReleaseId("org.drools", "drools-core", "5.5.0.Final");
+        ReleaseId dependency = getTestDependencyJarReleaseId();
         ReleaseId releaseId = ks.newReleaseId("org.kie", "maven-test", "1.0-SNAPSHOT");
 
         String pomText = getPom(releaseId, dependency);
@@ -154,17 +156,12 @@ public class KieModuleMavenTest extends AbstractKieCiTest {
         KieContainer kieContainer = ks.newKieContainer(releaseId);
 
         Collection<ReleaseId> expectedDependencies = new HashSet<ReleaseId>();
-        expectedDependencies.add(ks.newReleaseId("org.drools", "knowledge-api", "5.5.0.Final"));
-        expectedDependencies.add(ks.newReleaseId("org.drools", "knowledge-internal-api", "5.5.0.Final"));
-        expectedDependencies.add(ks.newReleaseId("org.drools", "drools-core", "5.5.0.Final"));
-        expectedDependencies.add(ks.newReleaseId("org.mvel", "mvel2", "2.1.3.Final"));
-        expectedDependencies.add(ks.newReleaseId("org.slf4j", "slf4j-api", "1.6.4"));
-
+        expectedDependencies.add(dependency);
+        expectedDependencies.add(ks.newReleaseId(dependency.getGroupId(), "kie-ci-test-jar", dependency.getVersion()));
         Collection<ReleaseId> dependencies = ((InternalKieModule)((KieContainerImpl) kieContainer)
                 .getKieModuleForKBase( "KBase1" ))
                 .getJarDependencies( DependencyFilter.TAKE_ALL_FILTER );
         assertThat(dependencies).isNotNull();
-        assertThat(dependencies.size()).isEqualTo(5);
         
         ClassLoader kieContainerCL = kieContainer.getClassLoader();
         assertThat(kieContainerCL instanceof KieTypeResolver).as("Kie Container class loader must be of KieTypeResolver type").isTrue();
@@ -271,10 +268,11 @@ public class KieModuleMavenTest extends AbstractKieCiTest {
             }
         };
 
-        ReleaseId dependency = ks.newReleaseId("org.drools", "drools-core", "${version.org.drools}");
+        final ReleaseId dependencyReleaseIdTemplate = getTestDependencyJarReleaseId();
+        ReleaseId dependency = ks.newReleaseId(dependencyReleaseIdTemplate.getGroupId(), dependencyReleaseIdTemplate.getArtifactId(), "${version.org.drools.test}");
         ReleaseId releaseId = ks.newReleaseId("org.kie.test", "maven-test", "1.0-SNAPSHOT");
-        InternalKieModule kJar1 = createKieJarWithProperties(ks, releaseId, true, "5.5.0.Final", new ReleaseId[]{dependency}, "rule1", "rule2");
-        String pomText = generatePomXmlWithProperties(releaseId, "5.5.0.Final", dependency);
+        InternalKieModule kJar1 = createKieJarWithProperties(ks, releaseId, true, dependencyReleaseIdTemplate.getVersion(), new ReleaseId[]{dependency}, "rule1", "rule2");
+        String pomText = generatePomXmlWithProperties(releaseId, "${project.version}", dependency);
         File pomFile = new File(System.getProperty("java.io.tmpdir"), MavenRepository.toFileName(releaseId, null) + ".pom");
         try {
             FileOutputStream fos = new FileOutputStream(pomFile);
@@ -357,7 +355,7 @@ public class KieModuleMavenTest extends AbstractKieCiTest {
         return sBuilder.toString();
     }
 
-    public static String generatePomXmlWithProperties(ReleaseId releaseId, String droolsVersion, ReleaseId... dependencies) {
+    public static String generatePomXmlWithProperties(ReleaseId releaseId, String dependencyVersion, ReleaseId... dependencies) {
         StringBuilder sBuilder = new StringBuilder();
         sBuilder.append("<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" \n");
         sBuilder.append(" xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\"> \n");
@@ -369,7 +367,7 @@ public class KieModuleMavenTest extends AbstractKieCiTest {
         sBuilder.append(" <packaging>jar</packaging> \n");
         sBuilder.append(" <name>Default</name> \n");
         sBuilder.append(" <properties> \n");
-        sBuilder.append(" <version.org.drools>"+droolsVersion+"</version.org.drools> \n");
+        sBuilder.append(" <version.org.drools.test>"+dependencyVersion+"</version.org.drools.test> \n");
         sBuilder.append(" </properties> \n");
 
         if (dependencies.length > 0) {

@@ -1,48 +1,32 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.serialization.protobuf;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
-
+import org.drools.base.base.ValueResolver;
+import org.drools.base.common.DroolsObjectInputStream;
+import org.drools.base.common.DroolsObjectOutputStream;
 import org.drools.core.ClockType;
 import org.drools.core.SessionConfiguration;
-import org.drools.core.base.ClassObjectType;
-import org.drools.core.common.BaseNode;
-import org.drools.core.common.DroolsObjectInputStream;
-import org.drools.core.common.DroolsObjectOutputStream;
-import org.drools.core.common.InternalAgenda;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.base.ClassObjectType;
+import org.drools.core.common.*;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.impl.EnvironmentFactory;
 import org.drools.core.impl.RuleBaseFactory;
 import org.drools.core.marshalling.ClassObjectMarshallingStrategyAcceptor;
@@ -51,9 +35,9 @@ import org.drools.core.reteoo.MockTupleSource;
 import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.RuleTerminalNode;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.rule.MapBackedClassLoader;
-import org.drools.core.rule.consequence.Consequence;
-import org.drools.core.rule.consequence.KnowledgeHelper;
+import org.drools.base.rule.MapBackedClassLoader;
+import org.drools.base.rule.consequence.Consequence;
+import org.drools.base.rule.consequence.ConsequenceContext;
 import org.drools.core.time.impl.DurationTimer;
 import org.drools.core.time.impl.PseudoClockScheduler;
 import org.drools.core.util.KeyStoreConstants;
@@ -61,15 +45,7 @@ import org.drools.core.util.KeyStoreHelper;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.drools.mvel.CommonTestMethodBase;
-import org.drools.mvel.compiler.Address;
-import org.drools.mvel.compiler.Cell;
-import org.drools.mvel.compiler.Cheese;
-import org.drools.mvel.compiler.FactA;
-import org.drools.mvel.compiler.FactB;
-import org.drools.mvel.compiler.FactC;
-import org.drools.mvel.compiler.Message;
-import org.drools.mvel.compiler.Person;
-import org.drools.mvel.compiler.Primitives;
+import org.drools.mvel.compiler.*;
 import org.drools.mvel.integrationtests.IteratorToList;
 import org.drools.serialization.protobuf.marshalling.IdentityPlaceholderResolverStrategy;
 import org.drools.serialization.protobuf.marshalling.RuleBaseNodes;
@@ -87,11 +63,7 @@ import org.kie.api.marshalling.KieMarshallers;
 import org.kie.api.marshalling.Marshaller;
 import org.kie.api.marshalling.ObjectMarshallingStrategy;
 import org.kie.api.marshalling.ObjectMarshallingStrategyAcceptor;
-import org.kie.api.runtime.Environment;
-import org.kie.api.runtime.EnvironmentName;
-import org.kie.api.runtime.Globals;
-import org.kie.api.runtime.KieSession;
-import org.kie.api.runtime.KieSessionConfiguration;
+import org.kie.api.runtime.*;
 import org.kie.api.runtime.conf.ClockTypeOption;
 import org.kie.api.runtime.conf.TimedRuleExecutionOption;
 import org.kie.api.runtime.conf.TimerJobFactoryOption;
@@ -101,6 +73,14 @@ import org.kie.internal.builder.KnowledgeBuilderConfiguration;
 import org.kie.internal.builder.KnowledgeBuilderFactory;
 import org.kie.internal.marshalling.MarshallerFactory;
 import org.kie.internal.utils.KieHelper;
+
+import java.io.*;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -961,7 +941,7 @@ public class MarshallingTest extends CommonTestMethodBase {
         rule2 += "    list.add( \"fired2\" );\n";
         rule2 += "end";
 
-        InternalKnowledgeBase kBase = (InternalKnowledgeBase) loadKnowledgeBaseFromString( rule1 );
+        InternalKnowledgeBase kBase = (InternalKnowledgeBase) loadKnowledgeBaseFromString(rule1);
 
         // Make sure the rete node map is created correctly
         Map<Integer, BaseNode> nodes = RuleBaseNodes.getNodeMap(kBase);
@@ -1051,7 +1031,7 @@ public class MarshallingTest extends CommonTestMethodBase {
         KieBase kBase = loadKnowledgeBaseFromString( rule );
 
         // Make sure the rete node map is created correctly
-        Map<Integer, BaseNode> nodes = RuleBaseNodes.getNodeMap( (InternalKnowledgeBase) kBase );
+        Map<Integer, BaseNode> nodes = RuleBaseNodes.getNodeMap( (InternalKnowledgeBase) kBase);
 
         assertThat(nodes.size()).isEqualTo(5);
         assertThat(((ClassObjectType) ((ObjectTypeNode) nodes.get(3)).getObjectType()).getClassType().getSimpleName()).isEqualTo("Cheese");
@@ -2023,11 +2003,11 @@ public class MarshallingTest extends CommonTestMethodBase {
 
         ksession.insert( new A() );
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         ksession.insert( new B() );
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         ksession.fireAllRules();
         assertThat(ksession.getObjects().size()).isEqualTo(2);
@@ -2046,13 +2026,14 @@ public class MarshallingTest extends CommonTestMethodBase {
         final List<String> fired = new ArrayList<String>();
 
         rule.setConsequence( new Consequence() {
-            public void evaluate(KnowledgeHelper knowledgeHelper,
-                                 ReteEvaluator reteEvaluator) throws Exception {
-                fired.add( "a" );
-            }
-
+            @Override
             public String getName() {
                 return "default";
+            }
+
+            @Override
+            public void evaluate(ConsequenceContext knowledgeHelper, ValueResolver valueResolver) throws Exception {
+                fired.add( "a" );
             }
         } );
 
@@ -2164,21 +2145,21 @@ public class MarshallingTest extends CommonTestMethodBase {
         EntryPoint aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         EntryPoint bep = ksession.getEntryPoint( "b-ep" );
         bep.insert( new B() );
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         EntryPoint cep = ksession.getEntryPoint( "c-ep" );
         cep.insert( new C() );
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         ksession.fireAllRules();
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         assertThat(list.size()).isEqualTo(3);
 
@@ -2191,14 +2172,14 @@ public class MarshallingTest extends CommonTestMethodBase {
         cep = ksession.getEntryPoint( "c-ep" );
         assertThat(cep.getFactHandles().size()).isEqualTo(1);
 
-        PseudoClockScheduler timeService = (PseudoClockScheduler) ksession.getSessionClock();
+        PseudoClockScheduler timeService = ksession.getSessionClock();
         timeService.advanceTime( 11, TimeUnit.SECONDS );
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         ksession.fireAllRules();
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         aep = ksession.getEntryPoint( "a-ep" );
         assertThat(aep.getFactHandles().size()).isEqualTo(0);
@@ -2249,16 +2230,16 @@ public class MarshallingTest extends CommonTestMethodBase {
         EntryPoint aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         PseudoClockScheduler timeService = (PseudoClockScheduler) ksession.getSessionClock();
         timeService.advanceTime( 3, TimeUnit.SECONDS );
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         ksession.fireAllRules();
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         assertThat(list.size()).isEqualTo(0);
     }
@@ -2301,37 +2282,37 @@ public class MarshallingTest extends CommonTestMethodBase {
 
         EntryPoint aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         list.clear();
         ksession.fireAllRules();
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
         assertThat(((List) list.get(0)).size()).isEqualTo(2);
 
         PseudoClockScheduler timeService = (PseudoClockScheduler) ksession.getSessionClock();
         timeService.advanceTime( 15, TimeUnit.SECONDS );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         list.clear();
         ksession.fireAllRules();
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
         assertThat(((List) list.get(0)).size()).isEqualTo(4);
 
         timeService = (PseudoClockScheduler) ksession.getSessionClock();
         timeService.advanceTime( 20, TimeUnit.SECONDS );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         list.clear();
         ksession.fireAllRules();
@@ -2376,28 +2357,28 @@ public class MarshallingTest extends CommonTestMethodBase {
 
         EntryPoint aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         list.clear();
         ksession.fireAllRules();
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
         assertThat(((List) list.get(0)).size()).isEqualTo(2);
 
         aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         aep = ksession.getEntryPoint( "a-ep" );
         aep.insert( new A() );
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         list.clear();
         ksession.fireAllRules();
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
         assertThat(((List) list.get(0)).size()).isEqualTo(3);
     }
 
@@ -2411,7 +2392,7 @@ public class MarshallingTest extends CommonTestMethodBase {
         final Person bob = new Person( "bob" );
         ksession.insert( bob );
 
-        ksession = marsallStatefulKnowledgeSession( ksession );
+        ksession = marshallStatefulKnowledgeSession( ksession );
 
         assertThat(ksession.getFactCount()).isEqualTo(1);
         assertThat(ksession.getObjects().iterator().next()).isEqualTo(bob);
@@ -2431,15 +2412,13 @@ public class MarshallingTest extends CommonTestMethodBase {
         assertThat(facts.size()).isEqualTo(2);
     }
 
-    private KieSession marsallStatefulKnowledgeSession(KieSession ksession) throws IOException,
-                                                                                                       ClassNotFoundException {
+    private KieSession marshallStatefulKnowledgeSession(KieSession ksession) throws IOException, ClassNotFoundException {
         Globals globals = ksession.getGlobals();
 
         KieBase kbase = ksession.getKieBase();
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        MarshallerFactory.newMarshaller( kbase ).marshall( out,
-                                                           ksession );
+        MarshallerFactory.newMarshaller( kbase ).marshall( out, ksession );
 
         KieSessionConfiguration ksconf = RuleBaseFactory.newKnowledgeSessionConfiguration();
         ksconf.setOption( TimerJobFactoryOption.get("trackable") );
@@ -2552,7 +2531,7 @@ public class MarshallingTest extends CommonTestMethodBase {
         clock.advanceTime( 4, TimeUnit.SECONDS );
 
         assertThat(ksession.getFactCount()).isEqualTo(2);
-        ksession.fireAllRules();
+        assertThat(ksession.fireAllRules()).isEqualTo(1);
         assertThat(ksession.getFactCount()).isEqualTo(0);
     }
 
@@ -2851,5 +2830,45 @@ public class MarshallingTest extends CommonTestMethodBase {
         // Wait for our thread to exit
         // ** The thread exits if we call t.interrupt();
         t.join();
+    }
+
+    @Test
+    public void cepActivation_shouldFireActivation() throws Exception {
+        // DROOLS-7531
+        String str =
+                "import " + getClass().getCanonicalName() + ".*\n" +
+                "declare A\n" +
+                " @role( event )\n" +
+                " @expires( 10m )\n" +
+                "end\n" +
+                "declare B\n" +
+                " @role( event )\n" +
+                " @expires( 10m )\n" +
+                "end\n" +
+                "rule one\n" +
+                "when\n" +
+                "   $a : A()\n" +
+                "   not ( B(this after[0s, 5s] $a) )\n" +
+                "then\n" +
+                "  System.out.println(\"Fired!\");\n" +
+                "end\n";
+
+        KieBaseConfiguration config = RuleBaseFactory.newKnowledgeBaseConfiguration();
+        config.setOption(EventProcessingOption.STREAM);
+
+        KieBase kBase = loadKnowledgeBaseFromString(config, str);
+
+        KieSessionConfiguration ksconf = RuleBaseFactory.newKnowledgeSessionConfiguration();
+        ksconf.setOption(ClockTypeOption.PSEUDO);
+        KieSession ksession = kBase.newKieSession(ksconf, null);
+        PseudoClockScheduler sessionClock = (PseudoClockScheduler) ksession.getSessionClock();
+
+        ksession.insert(new A());
+        sessionClock.advanceTime(6, TimeUnit.SECONDS);
+
+        ksession = marshallStatefulKnowledgeSession(ksession);
+
+        int fired = ksession.fireAllRules();
+        assertThat(fired).isEqualTo(1);
     }
 }

@@ -1,26 +1,28 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler.constraints;
 
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.rule.Declaration;
-import org.drools.core.reteoo.Tuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.rule.Declaration;
 import org.drools.model.Binding;
+import org.kie.api.runtime.rule.FactHandle;
 
 public class BindingEvaluator {
     private final Declaration[] declarations;
@@ -31,7 +33,7 @@ public class BindingEvaluator {
         this.binding = binding;
     }
 
-    public Object evaluate( InternalFactHandle handle, Tuple tuple, ReteEvaluator reteEvaluator, Declaration[] declarations, Declaration[] innerDeclarations ) {
+    public Object evaluate( FactHandle handle, BaseTuple tuple, ValueResolver reteEvaluator, Declaration[] declarations, Declaration[] innerDeclarations ) {
         return evaluate( getArguments( handle, tuple, reteEvaluator, declarations, innerDeclarations ) );
     }
 
@@ -43,7 +45,7 @@ public class BindingEvaluator {
         return declarations;
     }
 
-    private Object[] getArguments( InternalFactHandle handle, Tuple tuple, ReteEvaluator reteEvaluator, Declaration[] declarations, Declaration[] innerDeclarations ) {
+    private Object[] getArguments( FactHandle handle, BaseTuple tuple, ValueResolver reteEvaluator, Declaration[] declarations, Declaration[] innerDeclarations ) {
         Object[] params = new Object[declarations.length + innerDeclarations.length];
         for (int i = 0; i < innerDeclarations.length; i++) {
             params[i] = getArgument( handle, reteEvaluator, innerDeclarations[i], tuple );
@@ -54,7 +56,7 @@ public class BindingEvaluator {
         return params;
     }
 
-    public static Object getArgument(InternalFactHandle handle, ReteEvaluator reteEvaluator, Declaration declaration, Tuple tuple ) {
+    public static Object getArgument(FactHandle handle, ValueResolver reteEvaluator, Declaration declaration, BaseTuple tuple) {
         int tupleIndex = declaration.getTupleIndex();
         return declaration.getValue(reteEvaluator, tuple != null && tupleIndex < tuple.size() ? tuple.get(tupleIndex) : handle);
     }

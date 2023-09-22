@@ -1,27 +1,31 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.asm;
 
 import java.util.Map;
 
+import org.drools.base.base.ValueResolver;
 import org.drools.compiler.rule.builder.RuleBuildContext;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.rule.GroupElement;
-import org.drools.core.rule.accessor.CompiledInvoker;
-import org.drools.core.rule.consequence.Consequence;
-import org.drools.core.rule.consequence.KnowledgeHelper;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.accessor.CompiledInvoker;
+import org.drools.base.rule.consequence.Consequence;
+import org.drools.base.rule.consequence.ConsequenceContext;
 import org.mvel2.asm.Label;
 import org.mvel2.asm.MethodVisitor;
 
@@ -74,7 +78,7 @@ public class ASMConsequenceStubBuilder extends ASMConsequenceBuilder {
             public void body(MethodVisitor mv) {
                 returnAsArray((Boolean[]) vars.get("notPatterns"));
             }
-        }).addMethod(ACC_PUBLIC, "evaluate", generator.methodDescr(null, KnowledgeHelper.class, ReteEvaluator.class), new String[]{"java/lang/Exception"}, new ClassGenerator.MethodBody() {
+        }).addMethod(ACC_PUBLIC, "evaluate", generator.methodDescr(null, ConsequenceContext.class, ValueResolver.class), new String[]{"java/lang/Exception"}, new ClassGenerator.MethodBody() {
             public void body(MethodVisitor mv) {
                 Label syncStart = new Label();
                 Label syncEnd = new Label();
@@ -99,7 +103,7 @@ public class ASMConsequenceStubBuilder extends ASMConsequenceBuilder {
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
                 // ... ConsequenceGenerator.generate(this, knowledgeHelper, workingMemory)
-                invokeStatic(ConsequenceGenerator.class, "generate", null, ConsequenceStub.class, KnowledgeHelper.class, ReteEvaluator.class);
+                invokeStatic(ConsequenceGenerator.class, "generate", null, ConsequenceStub.class, ConsequenceContext.class, ValueResolver.class);
                 mv.visitLabel(ifNotInitialized);
                 mv.visitVarInsn(ALOAD, 3);
                 mv.visitInsn(MONITOREXIT);
@@ -117,7 +121,7 @@ public class ASMConsequenceStubBuilder extends ASMConsequenceBuilder {
                 getFieldFromThis("consequence", Consequence.class);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
-                invokeInterface(Consequence.class, "evaluate", null, KnowledgeHelper.class, ReteEvaluator.class);
+                invokeInterface(Consequence.class, "evaluate", null, ConsequenceContext.class, ValueResolver.class);
                 mv.visitInsn(RETURN);
             }
         }).addMethod(ACC_PUBLIC, "setConsequence", generator.methodDescr(null, Consequence.class), new ClassGenerator.MethodBody() {

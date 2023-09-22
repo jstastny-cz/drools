@@ -1,39 +1,42 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
-import java.util.List;
-
+import org.drools.base.base.ObjectType;
+import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.Pattern;
 import org.drools.core.common.BaseNode;
 import org.drools.core.common.DefaultFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.RuleBasePartitionId;
-import org.drools.core.common.UpdateContext;
-import org.drools.core.impl.RuleBase;
-import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.rule.Pattern;
-import org.drools.core.base.ObjectType;
 import org.drools.core.common.PropagationContext;
-import org.drools.core.util.bitmask.AllSetBitMask;
-import org.drools.core.util.bitmask.BitMask;
-import org.drools.core.util.bitmask.EmptyBitMask;
+import org.drools.core.common.UpdateContext;
+import org.drools.core.impl.InternalRuleBase;
+import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.util.bitmask.AllSetBitMask;
+import org.drools.util.bitmask.BitMask;
+import org.drools.util.bitmask.EmptyBitMask;
 
-import static org.drools.core.reteoo.PropertySpecificUtil.getAccessibleProperties;
-import static org.drools.core.reteoo.PropertySpecificUtil.isPropertyReactive;
+import java.util.List;
+
+import static org.drools.base.reteoo.PropertySpecificUtil.getAccessibleProperties;
+import static org.drools.base.reteoo.PropertySpecificUtil.isPropertyReactive;
 
 /**
  * A source of <code>FactHandle</code>s for an <code>ObjectSink</code>.
@@ -47,9 +50,7 @@ import static org.drools.core.reteoo.PropertySpecificUtil.isPropertyReactive;
  */
 public abstract class ObjectSource extends BaseNode {
 
-    // ------------------------------------------------------------
-    // Instance members
-    // ------------------------------------------------------------
+
 
     /** The destination for <code>FactHandleImpl</code>. */
     protected ObjectSinkPropagator sink;
@@ -73,15 +74,8 @@ public abstract class ObjectSource extends BaseNode {
     /**
      * Single parameter constructor that specifies the unique id of the node.
      */
-    protected ObjectSource(final int id,
-                 final RuleBasePartitionId partitionId,
-                 final boolean partitionsEnabled) {
-        this( id,
-              partitionId,
-              partitionsEnabled,
-              null,
-              3,
-              3);
+    protected ObjectSource(int id, RuleBasePartitionId partitionId) {
+        this( id, partitionId, null, 3, 3);
     }
 
     /**
@@ -89,11 +83,10 @@ public abstract class ObjectSource extends BaseNode {
      */
     ObjectSource(final int id,
                  final RuleBasePartitionId partitionId,
-                 final boolean partitionsEnabled,
                  final ObjectSource objectSource,
                  final int alphaNodeHashingThreshold,
                  final int alphaNodeRangeIndexThreshold) {
-        super(id, partitionId, partitionsEnabled);
+        super(id, partitionId);
         this.source = objectSource;
         this.alphaNodeHashingThreshold = alphaNodeHashingThreshold;
         this.alphaNodeRangeIndexThreshold = alphaNodeRangeIndexThreshold;
@@ -112,7 +105,7 @@ public abstract class ObjectSource extends BaseNode {
         this.source = source;
     }
 
-    public RuleBase getRuleBase() {
+    public InternalRuleBase getRuleBase() {
         return source.getRuleBase();
     }
 
@@ -126,7 +119,7 @@ public abstract class ObjectSource extends BaseNode {
         Pattern pattern = context.getLastBuiltPatterns()[0];
         ObjectType objectType = pattern.getObjectType();
         
-        if ( isPropertyReactive(context, objectType) ) {
+        if ( isPropertyReactive(context.getRuleBase(), objectType) ) {
             List<String> settableProperties = getAccessibleProperties( context.getRuleBase(), objectType );
             declaredMask = calculateDeclaredMask(objectType, settableProperties);
         } else {

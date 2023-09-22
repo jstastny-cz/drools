@@ -1,84 +1,73 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.asm;
 
-import java.util.List;
-
+import org.drools.base.base.ValueResolver;
 import org.drools.core.WorkingMemory;
 import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
+import org.drools.base.reteoo.BaseTuple;
 import org.drools.core.reteoo.LeftTuple;
-import org.drools.core.reteoo.RuleTerminalNode;
-import org.drools.core.reteoo.Sink;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.rule.accessor.CompiledInvoker;
-import org.drools.core.rule.consequence.Consequence;
-import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.core.reteoo.Tuple;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.CompiledInvoker;
+import org.drools.base.rule.consequence.Consequence;
+import org.drools.base.rule.consequence.ConsequenceContext;
 import org.drools.mvel.asm.GeneratorHelper.DeclarationMatcher;
 import org.kie.api.runtime.rule.FactHandle;
 import org.mvel2.asm.MethodVisitor;
 
+import java.util.List;
+
 import static org.drools.mvel.asm.GeneratorHelper.createInvokerClassGenerator;
 import static org.drools.mvel.asm.GeneratorHelper.matchDeclarationsToTuple;
-import static org.mvel2.asm.Opcodes.AALOAD;
-import static org.mvel2.asm.Opcodes.ACC_PUBLIC;
-import static org.mvel2.asm.Opcodes.ALOAD;
-import static org.mvel2.asm.Opcodes.ARETURN;
-import static org.mvel2.asm.Opcodes.ASTORE;
-import static org.mvel2.asm.Opcodes.CHECKCAST;
-import static org.mvel2.asm.Opcodes.INVOKESTATIC;
-import static org.mvel2.asm.Opcodes.RETURN;
+import static org.mvel2.asm.Opcodes.*;
 
 public class ConsequenceGenerator {
 
-    public static void generate( final ConsequenceStub stub, KnowledgeHelper knowledgeHelper, ReteEvaluator reteEvaluator) {
-        RuleTerminalNode rtn = knowledgeHelper.getMatch().getTuple().getTupleSink();
-        final Declaration[] declarations = rtn.getRequiredDeclarations();
-        final Tuple tuple = knowledgeHelper.getTuple();
+    public static void generate(final ConsequenceStub stub, ConsequenceContext knowledgeHelper, ValueResolver valueResolver) {
+        final Declaration[] declarations = knowledgeHelper.getRequiredDeclarations();
+        final Tuple tuple = (Tuple) knowledgeHelper.getTuple();
 
         // Sort declarations based on their offset, so it can ascend the tuple's parents stack only once
         final List<DeclarationMatcher> declarationMatchers = matchDeclarationsToTuple(declarations);
 
-        final ClassGenerator generator = createInvokerClassGenerator(stub, reteEvaluator).setInterfaces(Consequence.class, CompiledInvoker.class);
+        final ClassGenerator generator = createInvokerClassGenerator(stub, valueResolver).setInterfaces(Consequence.class, CompiledInvoker.class);
 
         generator.addMethod(ACC_PUBLIC, "getName", generator.methodDescr(String.class), new ClassGenerator.MethodBody() {
             public void body(MethodVisitor mv) {
                 push(stub.getGeneratedInvokerClassName());
                 mv.visitInsn(ARETURN);
             }
-        }).addMethod(ACC_PUBLIC, "evaluate", generator.methodDescr(null, KnowledgeHelper.class, ReteEvaluator.class), new String[]{"java/lang/Exception"}, new GeneratorHelper.EvaluateMethod() {
+        }).addMethod(ACC_PUBLIC, "evaluate", generator.methodDescr(null, ConsequenceContext.class, ValueResolver.class), new String[]{"java/lang/Exception"}, new GeneratorHelper.EvaluateMethod() {
             public void body(MethodVisitor mv) {
                 // Tuple tuple = knowledgeHelper.getTuple();
                 mv.visitVarInsn(ALOAD, 1);
-                invokeInterface(KnowledgeHelper.class, "getTuple", Tuple.class);
+                invokeInterface(ConsequenceContext.class, "getTuple", BaseTuple.class);
                 cast(LeftTuple.class);
                 mv.visitVarInsn(ASTORE, 3); // LeftTuple
 
-                // Declaration[] declarations = ((RuleTerminalNode)knowledgeHelper.getMatch().getTuple().getTupleSink()).getDeclarations();
+                // Declaration[] declarations = knowledgeHelper.getRequiredDeclarations();
                 mv.visitVarInsn(ALOAD, 1);
-                invokeInterface(KnowledgeHelper.class, "getMatch", InternalMatch.class);
-                invokeInterface(InternalMatch.class, "getTuple", Tuple.class);
-                invokeInterface(Tuple.class, "getTupleSink", Sink.class);
-                cast(RuleTerminalNode.class);
-                invokeVirtual(RuleTerminalNode.class, "getRequiredDeclarations", Declaration[].class);
+                invokeInterface(ConsequenceContext.class, "getRequiredDeclarations", Declaration[].class);
                 mv.visitVarInsn(ASTORE, 4);
 
-                
-                Tuple currentTuple = tuple;
+                BaseTuple currentTuple = tuple;
                 objAstorePos = 6; // astore start position for objects to store in loop
                 int[] paramsPos = new int[declarations.length];
                 // declarationMatchers is already sorted by offset with tip declarations now first
@@ -125,7 +114,7 @@ public class ConsequenceGenerator {
                 }
 
                 // @{ruleClassName}.@{methodName}(KnowledgeHelper, @foreach{declr : declarations} Object, FactHandle @end)
-                StringBuilder consequenceMethodDescr = new StringBuilder("(L" + KnowledgeHelper.class.getName().replace('.', '/') +";");
+                StringBuilder consequenceMethodDescr = new StringBuilder("(L" + ConsequenceContext.class.getName().replace('.', '/') +";");
                 mv.visitVarInsn(ALOAD, 1); // KnowledgeHelper
                 for (int i = 0; i < declarations.length; i++) {
                     load(paramsPos[i] + 1); // obj[i]
@@ -142,6 +131,7 @@ public class ConsequenceGenerator {
             }
         });
 
-        stub.setConsequence(generator.newInstance());
+        Consequence consequence = generator.newInstance();
+        stub.setConsequence(consequence);
     }
 }

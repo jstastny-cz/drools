@@ -1,52 +1,38 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.serialization.protobuf.iterators;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.Memory;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.AccumulateNode.AccumulateContext;
 import org.drools.core.reteoo.AccumulateNode.AccumulateMemory;
-import org.drools.core.reteoo.BetaMemory;
-import org.drools.core.reteoo.BetaNode;
+import org.drools.core.reteoo.*;
 import org.drools.core.reteoo.FromNode.FromMemory;
-import org.drools.core.reteoo.LeftInputAdapterNode;
-import org.drools.core.reteoo.LeftTuple;
-import org.drools.core.reteoo.LeftTupleSink;
-import org.drools.core.reteoo.LeftTupleSource;
-import org.drools.core.reteoo.NodeTypeEnums;
-import org.drools.core.reteoo.ObjectSource;
-import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.reteoo.ObjectTypeNode.ObjectTypeNodeMemory;
-import org.drools.core.reteoo.RightTuple;
-import org.drools.core.reteoo.RuleTerminalNode;
-import org.drools.core.reteoo.TerminalNode;
-import org.drools.core.reteoo.TupleMemory;
-import org.drools.core.reteoo.Tuple;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.core.util.FastIterator;
 import org.drools.core.util.Iterator;
+
+import java.util.*;
 
 public class PhreakActivationIterator
     implements
@@ -61,7 +47,7 @@ public class PhreakActivationIterator
     }
 
     private PhreakActivationIterator(ReteEvaluator reteEvaluator,
-                                     RuleBase kbase) {
+                                     InternalRuleBase kbase) {
         internalMatches = collectAgendaItems(kbase, reteEvaluator);
         agendaItemIter =  internalMatches.iterator();
     }
@@ -78,7 +64,7 @@ public class PhreakActivationIterator
         }
     }
 
-    public static List<RuleTerminalNode> populateRuleTerminalNodes(RuleBase kbase, Set<RuleTerminalNode>  nodeSet) {
+    public static List<RuleTerminalNode> populateRuleTerminalNodes(InternalRuleBase kbase, Set<RuleTerminalNode>  nodeSet) {
         Collection<TerminalNode[]> nodesWithArray = kbase.getReteooBuilder().getTerminalNodes().values();
 
         for (TerminalNode[] nodeArray : nodesWithArray) {
@@ -92,7 +78,7 @@ public class PhreakActivationIterator
         return Arrays.asList(nodeSet.toArray(new RuleTerminalNode[nodeSet.size()]));
     }
 
-    public static List<InternalMatch> collectAgendaItems(RuleBase kbase, ReteEvaluator reteEvaluator) {
+    public static List<InternalMatch> collectAgendaItems(InternalRuleBase kbase, ReteEvaluator reteEvaluator) {
         Set<RuleTerminalNode> nodeSet = new HashSet<>();
         List<RuleTerminalNode> nodeList = populateRuleTerminalNodes(kbase, nodeSet);
 
@@ -131,7 +117,7 @@ public class PhreakActivationIterator
                         Tuple lt = BetaNode.getFirstTuple( bm.getLeftTupleMemory(), it );
                         for (; lt != null; lt = (LeftTuple) it.next(lt)) {
                             AccumulateContext accctx = (AccumulateContext) lt.getContextObject();
-                            collectFromPeers(accctx.getResultLeftTuple(), internalMatches, nodeSet, reteEvaluator);
+                            collectFromPeers((LeftTuple) accctx.getResultLeftTuple(), internalMatches, nodeSet, reteEvaluator);
                         }
                     } else if ( NodeTypeEnums.ExistsNode == node.getType() ) {
                         bm = (BetaMemory) reteEvaluator.getNodeMemories().peekNodeMemory(node);
@@ -193,10 +179,9 @@ public class PhreakActivationIterator
             os = os.getParentObjectSource();
         }
         ObjectTypeNode otn = (ObjectTypeNode) os;
-        final ObjectTypeNodeMemory omem = reteEvaluator.getNodeMemory(otn);
         LeftTupleSink firstLiaSink = lian.getSinkPropagator().getFirstLeftTupleSink();
 
-        java.util.Iterator<InternalFactHandle> it = omem.iterator();
+        java.util.Iterator<InternalFactHandle> it = otn.getFactHandlesIterator((InternalWorkingMemory) reteEvaluator);
         while (it.hasNext()) {
             InternalFactHandle fh = it.next();
             fh.forEachLeftTuple( lt -> {
@@ -219,7 +204,7 @@ public class PhreakActivationIterator
                 Object accctx = peer.getContextObject();
                 if (accctx instanceof AccumulateContext) {
                     // lefttuple representing an accumulated value now have that value as context object (it was null before) and must be skipped here
-                    collectFromLeftInput(((AccumulateContext) accctx).getResultLeftTuple(), internalMatches, nodeSet, reteEvaluator);
+                    collectFromLeftInput((LeftTuple) ((AccumulateContext) accctx).getResultLeftTuple(), internalMatches, nodeSet, reteEvaluator);
                 }
             } else if ( peer.getFirstChild() != null ) {
                 for (LeftTuple childLt = peer.getFirstChild(); childLt != null; childLt = childLt.getHandleNext()) {

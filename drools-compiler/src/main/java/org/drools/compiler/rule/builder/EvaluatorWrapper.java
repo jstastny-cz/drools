@@ -1,33 +1,36 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.rule.builder;
 
-import org.drools.core.base.ValueType;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.ValueType;
 import org.drools.core.base.extractors.ConstantValueReader;
-import org.drools.core.base.extractors.SelfReferenceClassFieldReader;
-import org.drools.core.base.field.ObjectFieldImpl;
-import org.drools.core.common.EventFactHandle;
-import org.drools.core.common.InternalFactHandle;
+import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
+import org.drools.base.base.field.ObjectFieldImpl;
+import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.Evaluator;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
-import org.drools.core.time.Interval;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.Evaluator;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.time.Interval;
+import org.kie.api.runtime.rule.FactHandle;
 
 import static org.drools.core.common.InternalFactHandle.dummyFactHandleOf;
 
@@ -124,22 +127,22 @@ public class EvaluatorWrapper implements Evaluator {
         return evaluator.getCoercedValueType();
     }
 
-    public boolean evaluate(ReteEvaluator reteEvaluator,
+    public boolean evaluate(ValueResolver valueResolver,
                             ReadAccessor extractor,
-                            InternalFactHandle factHandle,
+                            FactHandle factHandle,
                             FieldValue value) {
-        return evaluator.evaluate( reteEvaluator,
+        return evaluator.evaluate( valueResolver,
                                    extractor,
                                    factHandle,
                                    value );
     }
 
-    public boolean evaluate(ReteEvaluator reteEvaluator,
+    public boolean evaluate(ValueResolver valueResolver,
                             ReadAccessor leftExtractor,
-                            InternalFactHandle left,
+                            FactHandle left,
                             ReadAccessor rightExtractor,
-                            InternalFactHandle right) {
-        return evaluator.evaluate( reteEvaluator,
+                            FactHandle right) {
+        return evaluator.evaluate( valueResolver,
                                    leftExtractor,
                                    left,
                                    rightExtractor,
@@ -162,18 +165,18 @@ public class EvaluatorWrapper implements Evaluator {
         return evaluator.getInterval();
     }
 
-    public void loadHandles(InternalFactHandle[] handles, InternalFactHandle rightHandle) {
-        InternalFactHandle localLeftHandle = selfLeft ? null : getFactHandle(leftBinding, handles);
+    public void loadHandles(FactHandle[] handles, FactHandle rightHandle) {
+        FactHandle localLeftHandle = selfLeft ? null : getFactHandle(leftBinding, handles);
 
-        InternalFactHandle localRightHandle = selfRight ? rightHandle : getFactHandle(rightBinding, handles);
+        FactHandle localRightHandle = selfRight ? rightHandle : getFactHandle(rightBinding, handles);
         this.rightLiteral = localRightHandle == null;
 
         if (isTemporal()) {
             if (localLeftHandle == null) {
                 localLeftHandle = rightHandle;
             }
-            leftTimestamp = localLeftHandle instanceof EventFactHandle ? (( EventFactHandle ) localLeftHandle).getStartTimestamp() : null;
-            rightTimestamp = localRightHandle instanceof EventFactHandle ? (( EventFactHandle ) localRightHandle).getStartTimestamp() : null;
+            leftTimestamp = localLeftHandle instanceof DefaultEventHandle ? ((DefaultEventHandle) localLeftHandle).getStartTimestamp() : null;
+            rightTimestamp = localRightHandle instanceof DefaultEventHandle ? ((DefaultEventHandle) localRightHandle).getStartTimestamp() : null;
         }
     }
 
@@ -195,8 +198,8 @@ public class EvaluatorWrapper implements Evaluator {
         this.bindingName = bindingName;
     }
 
-    private static InternalFactHandle getFactHandle( Declaration declaration,
-                                                    InternalFactHandle[] handles ) {
+    private static FactHandle getFactHandle( Declaration declaration,
+                                             FactHandle[] handles ) {
         return handles != null && handles.length > declaration.getObjectIndex() ? handles[declaration.getObjectIndex()] : null;
     }
 }

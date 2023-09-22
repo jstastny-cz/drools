@@ -1,30 +1,29 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.ruleunits.impl.sessions;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-
+import org.drools.base.beliefsystem.Mode;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.factmodel.traits.Thing;
+import org.drools.base.factmodel.traits.TraitableBean;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.core.EntryPointsManager;
 import org.drools.core.QueryResultsImpl;
 import org.drools.core.RuleSessionConfiguration;
@@ -32,11 +31,10 @@ import org.drools.core.SessionConfiguration;
 import org.drools.core.WorkingMemory;
 import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.base.CalendarsImpl;
-import org.drools.core.base.DroolsQuery;
+import org.drools.core.base.DroolsQueryImpl;
 import org.drools.core.base.MapGlobalResolver;
 import org.drools.core.base.NonCloningQueryViewListener;
 import org.drools.core.base.QueryRowWithSubruleIndex;
-import org.drools.core.beliefsystem.Mode;
 import org.drools.core.common.ActivationsManager;
 import org.drools.core.common.ConcurrentNodeMemories;
 import org.drools.core.common.InternalFactHandle;
@@ -48,26 +46,21 @@ import org.drools.core.common.PhreakPropagationContext;
 import org.drools.core.common.PropagationContext;
 import org.drools.core.common.PropagationContextFactory;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.event.AgendaEventSupport;
 import org.drools.core.event.RuleEventListenerSupport;
 import org.drools.core.event.RuleRuntimeEventSupport;
-import org.drools.core.factmodel.traits.Thing;
-import org.drools.core.factmodel.traits.TraitableBean;
 import org.drools.core.impl.ActivationsManagerImpl;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.phreak.PropagationEntry;
 import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.RuntimeComponentFactory;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.reteoo.Tuple;
-import org.drools.core.rule.Declaration;
 import org.drools.core.rule.accessor.FactHandleFactory;
-import org.drools.core.rule.accessor.GlobalResolver;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.drools.core.time.TimerService;
-import org.drools.core.util.bitmask.BitMask;
+import org.drools.util.bitmask.BitMask;
 import org.drools.kiesession.consequence.DefaultKnowledgeHelper;
 import org.drools.kiesession.consequence.StatefulKnowledgeSessionForRHS;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
@@ -84,15 +77,25 @@ import org.kie.api.runtime.rule.Match;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.time.SessionClock;
 
-import static org.drools.core.base.ClassObjectType.InitialFact_ObjectType;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.drools.base.base.ClassObjectType.InitialFact_ObjectType;
 
 public class RuleUnitExecutorImpl implements ReteEvaluator {
 
     private final RuleRuntimeEventSupport ruleRuntimeEventSupport = new RuleRuntimeEventSupport();
     private final AtomicLong propagationIdCounter = new AtomicLong(1);
 
-    private final RuleBase ruleBase;
+    private final InternalRuleBase ruleBase;
     private final long identifier;
+
     private final SessionConfiguration sessionConfiguration;
     private final FactHandleFactory handleFactory;
 
@@ -111,11 +114,13 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
 
     private RuleUnits ruleUnits;
 
-    public RuleUnitExecutorImpl(RuleBase knowledgeBase) {
+    private boolean tmsEnabled;
+
+    public RuleUnitExecutorImpl(InternalRuleBase knowledgeBase) {
         this(knowledgeBase, knowledgeBase.getSessionConfiguration().as(SessionConfiguration.KEY));
     }
 
-    public RuleUnitExecutorImpl(RuleBase knowledgeBase, SessionConfiguration sessionConfiguration) {
+    public RuleUnitExecutorImpl(InternalRuleBase knowledgeBase, SessionConfiguration sessionConfiguration) {
         this.ruleBase = knowledgeBase;
         this.identifier = ((InternalKnowledgeBase) ruleBase).nextWorkingMemoryCounter();
         this.sessionConfiguration = sessionConfiguration;
@@ -130,7 +135,7 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
         initInitialFact(ruleBase);
     }
 
-    private void initInitialFact(RuleBase kBase) {
+    private void initInitialFact(InternalRuleBase kBase) {
         WorkingMemoryEntryPoint defaultEntryPoint = entryPointsManager.getDefaultEntryPoint();
         InternalFactHandle handle = getFactHandleFactory().newInitialFactHandle(defaultEntryPoint);
 
@@ -154,7 +159,12 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
     }
 
     @Override
-    public RuleBase getKnowledgeBase() {
+    public InternalRuleBase getKnowledgeBase() {
+        return ruleBase;
+    }
+
+    @Override
+    public InternalRuleBase getRuleBase() {
         return ruleBase;
     }
 
@@ -233,6 +243,12 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
         return activationsManager.getAgendaEventSupport();
     }
 
+
+    @Override
+    public long getCurrentTime() {
+        return timerService.getCurrentTime();
+    }
+
     @Override
     public Calendars getCalendars() {
         if (this.calendars == null) {
@@ -293,7 +309,7 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
     public QueryResults getQueryResults(String queryName, Object... arguments) {
         activationsManager.flushPropagations();
 
-        DroolsQuery queryObject = new DroolsQuery( queryName, arguments, new NonCloningQueryViewListener(), false );
+        DroolsQueryImpl queryObject = new DroolsQueryImpl(queryName, arguments, new NonCloningQueryViewListener(), false );
 
         InternalFactHandle handle = this.handleFactory.newFactHandle( queryObject, null, this, getDefaultEntryPoint() );
 
@@ -324,6 +340,16 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
 
     public void setRuleUnits(RuleUnits ruleUnits) {
         this.ruleUnits = ruleUnits;
+    }
+
+    @Override
+    public void enableTMS() {
+        tmsEnabled = true;
+    }
+
+    @Override
+    public boolean isTMSEnabled() {
+        return tmsEnabled;
     }
 
     @Override
@@ -392,6 +418,11 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
                     knowledgeHelper.getActivation().getRule(),
                     knowledgeHelper.getActivation().getTuple().getTupleSink(),
                     fhState);
+        }
+
+        @Override
+        public Declaration[] getRequiredDeclarations() {
+            return knowledgeHelper.getRequiredDeclarations();
         }
 
         @Override
@@ -589,47 +620,47 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
         }
 
         @Override
-        public InternalFactHandle insert(Object object) {
+        public FactHandle insert(Object object) {
             return knowledgeHelper.insert(object);
         }
 
         @Override
-        public InternalFactHandle insert(Object object, boolean dynamic) {
+        public FactHandle insert(Object object, boolean dynamic) {
             return knowledgeHelper.insert(object, dynamic);
         }
 
         @Override
-        public InternalFactHandle insertLogical(Object object, Mode belief) {
+        public FactHandle insertLogical(Object object, Mode belief) {
             return knowledgeHelper.insertLogical(object, belief);
         }
 
         @Override
-        public InternalFactHandle insertLogical(Object object, Mode... beliefs) {
+        public FactHandle insertLogical(Object object, Mode... beliefs) {
             return knowledgeHelper.insertLogical(object, beliefs);
         }
 
         @Override
-        public InternalFactHandle insertLogical(Object object) {
+        public FactHandle insertLogical(Object object) {
             return knowledgeHelper.insertLogical(object);
         }
 
         @Override
-        public InternalFactHandle insertLogical(Object object, Object value) {
+        public FactHandle insertLogical(Object object, Object value) {
             return knowledgeHelper.insertLogical(object, value);
         }
 
         @Override
-        public InternalFactHandle insertLogical(EntryPoint ep, Object object) {
+        public FactHandle insertLogical(EntryPoint ep, Object object) {
             return knowledgeHelper.insertLogical(ep, object);
         }
 
         @Override
-        public InternalFactHandle bolster(Object object) {
+        public FactHandle bolster(Object object) {
             return knowledgeHelper.bolster(object);
         }
 
         @Override
-        public InternalFactHandle bolster(Object object, Object value) {
+        public FactHandle bolster(Object object, Object value) {
             return knowledgeHelper.bolster(object, value);
         }
 
@@ -639,12 +670,12 @@ public class RuleUnitExecutorImpl implements ReteEvaluator {
         }
 
         @Override
-        public InternalFactHandle getFactHandle(Object object) {
+        public FactHandle getFactHandle(Object object) {
             return knowledgeHelper.getFactHandle(object);
         }
 
         @Override
-        public InternalFactHandle getFactHandle(InternalFactHandle handle) {
+        public FactHandle getFactHandle(FactHandle handle) {
             return knowledgeHelper.getFactHandle(handle);
         }
 

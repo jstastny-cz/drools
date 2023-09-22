@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.tms.beliefsystem.jtms;
 
 import org.drools.core.WorkingMemoryEntryPoint;
@@ -24,7 +27,7 @@ import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemoryEntryPoint;
 import org.drools.core.common.ObjectTypeConfigurationRegistry;
 import org.drools.core.common.TruthMaintenanceSystem;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.common.PropagationContext;
 import org.drools.tms.LogicalDependency;
@@ -35,7 +38,7 @@ import org.drools.tms.beliefsystem.simple.SimpleLogicalDependency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.drools.core.reteoo.PropertySpecificUtil.allSetButTraitBitMask;
+import static org.drools.base.reteoo.PropertySpecificUtil.allSetButTraitBitMask;
 
 public class JTMSBeliefSystem<M extends JTMSMode<M>>
         implements
@@ -141,7 +144,7 @@ public class JTMSBeliefSystem<M extends JTMSMode<M>>
         if ( beliefSet.isEmpty() && fh.getEqualityKey().getStatus() == EqualityKey.JUSTIFIED ) {
             // the set is empty, so delete form the EP, so things are cleaned up.
             ep.delete(fh, fh.getObject(), getObjectTypeConf(beliefSet), context.getRuleOrigin(),
-                      null, internalMatch != null ? internalMatch.getTuple().getTupleSink() : null);
+                      internalMatch != null ? internalMatch.getTuple().getTupleSink() : null);
         } else  if ( !(processBeliefSet(rule, internalMatch, payload, context, jtmsBeliefSet, wasDecided, wasNegated, fh) && beliefSet.isEmpty())  ) {
             //  The state of the BS did not change, but maybe the prime did
             if ( fh.getObject() == payload ) {
@@ -207,7 +210,7 @@ public class JTMSBeliefSystem<M extends JTMSMode<M>>
 
             // was decided, now is not, so must be removed from the network. Leave in EP though, we only delete from that when the set is empty
             ep.delete(fh, fh.getObject(), getObjectTypeConf(jtmsBeliefSet), pctx.getRuleOrigin(),
-                      null, internalMatch != null ? internalMatch.getTuple().getTupleSink() : null);
+                      internalMatch != null ? internalMatch.getTuple().getTupleSink() : null);
             return true;
         } else if (wasNegated != jtmsBeliefSet.isNegated()) {
             // was decided, still is decided by the negation changed. This must be propagated through the engine
