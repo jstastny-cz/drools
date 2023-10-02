@@ -1,19 +1,21 @@
-/*
-* Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.compiler.lang;
 
 import java.io.InputStream;
@@ -44,8 +46,8 @@ import org.drools.drl.ast.descr.ExprConstraintDescr;
 import org.drools.drl.ast.descr.ForallDescr;
 import org.drools.drl.ast.descr.FromDescr;
 import org.drools.drl.ast.descr.FunctionDescr;
-import org.drools.drl.ast.descr.FunctionImportDescr;
 import org.drools.drl.ast.descr.GlobalDescr;
+import org.drools.drl.ast.descr.GroupByDescr;
 import org.drools.drl.ast.descr.ImportDescr;
 import org.drools.drl.ast.descr.MVELExprDescr;
 import org.drools.drl.ast.descr.NotDescr;
@@ -2034,6 +2036,52 @@ public class RuleParserTest {
         final PatternDescr p = (PatternDescr) rule.getLhs().getDescrs().get( 0 );
 
         assertThat(p.getObjectType()).isEqualTo("com.cheeseco.Cheese");
+    }
+
+    @Test
+    public void testGroupBy() throws Exception {
+        final PackageDescr pkg = (PackageDescr) parseResource( "compilationUnit",
+                "groupBy.drl" );
+
+        assertThat(pkg.getRules().size()).isEqualTo(1);
+        final RuleDescr rule = pkg.getRules().get(0);
+        assertThat(rule.getLhs().getDescrs().size()).isEqualTo(1);
+
+        final PatternDescr outPattern = (PatternDescr) rule.getLhs().getDescrs().get( 0 );
+        final GroupByDescr groupBy = (GroupByDescr) outPattern.getSource();
+        assertEqualsIgnoreWhitespace( "$initial",
+                groupBy.getGroupingKey() );
+        assertEqualsIgnoreWhitespace( "$p.getName().substring(0, 1)",
+                groupBy.getGroupingFunction() );
+        assertThat(groupBy.getActionCode()).isNull();
+        assertThat(groupBy.getReverseCode()).isNull();
+        assertThat(groupBy.getFunctions()).hasSize(2);
+        assertEqualsIgnoreWhitespace( "sum",
+                groupBy.getFunctions().get(0).getFunction() );
+        assertEqualsIgnoreWhitespace( "count",
+                groupBy.getFunctions().get(1).getFunction() );
+
+        assertThat(groupBy.getFunctions().get(0).getParams()).hasSize(1);
+        assertEqualsIgnoreWhitespace("$age",
+                groupBy.getFunctions().get(0).getParams()[0]);
+
+        assertThat(groupBy.getFunctions().get(1).getParams()).hasSize(0);
+
+        assertThat(groupBy.isExternalFunction()).isTrue();
+
+        final PatternDescr pattern = groupBy.getInputPattern();
+        assertThat(pattern.getObjectType()).isEqualTo("Person");
+        assertThat(pattern.getConstraint().getDescrs()).hasSize(1);
+        assertEqualsIgnoreWhitespace("$age : age < 30",
+                pattern.getConstraint().getDescrs().get(0).getText());
+
+        assertThat(pattern.getConstraint().getDescrs()).hasSize(1);
+        assertEqualsIgnoreWhitespace("$age : age < 30",
+                pattern.getConstraint().getDescrs().get(0).getText());
+
+        assertThat(outPattern.getConstraint().getDescrs()).hasSize(1);
+        assertEqualsIgnoreWhitespace("$sumOfAges > 10",
+                outPattern.getConstraint().getDescrs().get(0).getText());
     }
 
     @Test

@@ -1,35 +1,39 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.asm;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.drools.base.base.ValueResolver;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.util.ClassTypeResolver;
 import org.drools.util.TypeResolver;
 import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.accessor.CompiledInvoker;
-import org.drools.core.reteoo.Tuple;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.accessor.CompiledInvoker;
 import org.mvel2.asm.Label;
 import org.mvel2.asm.MethodVisitor;
 
@@ -96,19 +100,19 @@ public final class GeneratorHelper {
         }
     }
 
-    private static ClassLoader getClassLoader(final Object obj, final ReteEvaluator reteEvaluator) {
+    private static ClassLoader getClassLoader(final Object obj, final ValueResolver valueResolver) {
         // use the same ClassLoader used for the stub
         return obj.getClass().getClassLoader();
     }
 
-    static ClassGenerator createInvokerClassGenerator( InvokerStub stub, ReteEvaluator reteEvaluator) {
-        return createInvokerClassGenerator(stub, "", reteEvaluator);
+    static ClassGenerator createInvokerClassGenerator( InvokerStub stub, ValueResolver valueResolver) {
+        return createInvokerClassGenerator(stub, "", valueResolver);
     }
 
-    static ClassGenerator createInvokerClassGenerator(InvokerStub stub, String classSuffix, ReteEvaluator reteEvaluator) {
+    static ClassGenerator createInvokerClassGenerator(InvokerStub stub, String classSuffix, ValueResolver valueResolver) {
         String className = stub.getPackageName() + "." + stub.getGeneratedInvokerClassName() + classSuffix;
-        ClassLoader classLoader = getClassLoader(stub, reteEvaluator);
-        return createInvokerClassGenerator(className, stub, classLoader, getTypeResolver(stub, reteEvaluator, classLoader));
+        ClassLoader classLoader = getClassLoader(stub, valueResolver);
+        return createInvokerClassGenerator(className, stub, classLoader, getTypeResolver(stub, valueResolver, classLoader));
     }
 
     public static ClassGenerator createInvokerClassGenerator(final String className,
@@ -131,8 +135,8 @@ public final class GeneratorHelper {
         return generator;
     }
 
-    static TypeResolver getTypeResolver(final InvokerStub stub, final ReteEvaluator reteEvaluator, final ClassLoader classLoader) {
-        InternalKnowledgePackage pkg = reteEvaluator.getKnowledgeBase().getPackage(stub.getPackageName());
+    static TypeResolver getTypeResolver(final InvokerStub stub, final ValueResolver valueResolver, final ClassLoader classLoader) {
+        InternalKnowledgePackage pkg = ((InternalKnowledgeBase)valueResolver.getRuleBase()).getPackage(stub.getPackageName());
         TypeResolver typeResolver = pkg == null ? null : pkg.getTypeResolver();
         if (typeResolver == null) {
             Set<String> imports = new HashSet<>();
@@ -204,7 +208,7 @@ public final class GeneratorHelper {
             boolean needsPrimitive = !(expectedTypeDescr.startsWith("L") || expectedTypeDescr.startsWith("["));
             String returnedType = isObject ? "Ljava/lang/Object;" : typeDescr(declaration.getTypeName());
             mv.visitMethodInsn(INVOKEVIRTUAL, Declaration.class.getName().replace('.', '/'), readMethod,
-                               "(L" + ReteEvaluator.class.getName().replace('.', '/') + ";Ljava/lang/Object;)" + returnedType);
+                               "(L" + ValueResolver.class.getName().replace('.', '/') + ";Ljava/lang/Object;)" + returnedType);
             if (isObject) {
                 Class<?> declarationClass = declaration.getDeclarationClass();
                 if (declarationClass != null) {
@@ -223,12 +227,12 @@ public final class GeneratorHelper {
             return store(registry, declarationType);
         }
 
-        protected Tuple traverseTuplesUntilDeclaration(Tuple currentTuple, int tupleIndex, int tupleReg) {
+        protected BaseTuple traverseTuplesUntilDeclaration(BaseTuple currentTuple, int tupleIndex, int tupleReg) {
             // do not use currentTuple.skipEmptyHandles(), as we use else where, because we need the getParent as part of the generated code.
             while (currentTuple.getIndex() != tupleIndex) {
                 // FactHandle is null for eval, not and join nodes as it has no right input
                 mv.visitVarInsn(ALOAD, tupleReg);
-                invokeInterface(Tuple.class, "getParent", Tuple.class);
+                invokeInterface(BaseTuple.class, "getParent", BaseTuple.class);
                 mv.visitVarInsn(ASTORE, tupleReg); // tuple = tuple.getParent()
                 currentTuple = currentTuple.getParent();
             }
@@ -248,11 +252,11 @@ public final class GeneratorHelper {
             Label whileExit = new Label();
             mv.visitLabel(whileStart);
             mv.visitVarInsn(ALOAD, tupleReg);
-            invokeInterface(Tuple.class, "getIndex", Integer.TYPE); // tuple.getIndex()
+            invokeInterface(BaseTuple.class, "getIndex", Integer.TYPE); // tuple.getIndex()
             mv.visitVarInsn(ILOAD, declarOffsetReg); // declarations[i].getPattern().getOffset()
             mv.visitJumpInsn(IF_ICMPLE, whileExit); // if tuple.getQueueIndex() <= declarations[i].getPattern().getOffset() jump to whileExit
             mv.visitVarInsn(ALOAD, tupleReg);
-            invokeInterface(Tuple.class, "getParent", Tuple.class);
+            invokeInterface(BaseTuple.class, "getParent", BaseTuple.class);
             mv.visitVarInsn(ASTORE, tupleReg); // tuple = tuple.getParent()
             mv.visitJumpInsn(GOTO, whileStart);
             mv.visitLabel(whileExit);
@@ -278,7 +282,7 @@ public final class GeneratorHelper {
                     mv.visitVarInsn(ALOAD, declarReg);
                     push(i);
                     mv.visitInsn(AALOAD);  // declarations[i]
-                    invokeInterface(Tuple.class, "get", InternalFactHandle.class, Declaration.class);
+                    invokeInterface(BaseTuple.class, "get", InternalFactHandle.class, Declaration.class);
                     invokeInterface(InternalFactHandle.class, "getObject", Object.class);
                 } else {
                     mv.visitVarInsn(ALOAD, 1); // object
@@ -288,7 +292,7 @@ public final class GeneratorHelper {
                 boolean isObject = readMethod.equals("getValue");
                 String declarationType = declarations[i].getTypeName();
                 String returnedType = isObject ? "Ljava/lang/Object;" : typeDescr(declarationType);
-                mv.visitMethodInsn(INVOKEVIRTUAL, Declaration.class.getName().replace('.', '/'), readMethod, "(L" + ReteEvaluator.class.getName().replace('.', '/') + ";Ljava/lang/Object;)" + returnedType);
+                mv.visitMethodInsn(INVOKEVIRTUAL, Declaration.class.getName().replace('.', '/'), readMethod, "(L" + ValueResolver.class.getName().replace('.', '/') + ";Ljava/lang/Object;)" + returnedType);
                 if (isObject) {
                     mv.visitTypeInsn(CHECKCAST, internalName(declarationType));
                 }
@@ -306,7 +310,7 @@ public final class GeneratorHelper {
 
                 mv.visitVarInsn(ALOAD, wmReg); // workingMemory
                 push(globals[i]);
-                invokeInterface(ReteEvaluator.class, "getGlobal", Object.class, String.class);
+                invokeInterface(ValueResolver.class, "getGlobal", Object.class, String.class);
                 Class<?> primitiveType = convertPrimitiveNameToType(globalType);
                 if (primitiveType != null) {
                     cast(convertFromPrimitiveType(primitiveType), primitiveType);

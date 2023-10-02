@@ -1,18 +1,36 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.asm;
+
+import org.drools.base.base.BaseClassFieldReader;
+import org.drools.base.base.ClassFieldInspector;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.ValueType;
+import org.drools.core.base.*;
+import org.drools.core.base.ClassFieldAccessorCache.CacheEntry;
+import org.drools.base.base.extractors.BaseObjectClassFieldReader;
+import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
+import org.drools.core.common.InternalWorkingMemory;
+import org.drools.base.util.Drools;
+import org.drools.mvel.accessors.*;
+import org.drools.wiring.api.util.ByteArrayClassLoader;
+import org.mvel2.asm.*;
 
 import java.lang.reflect.Method;
 import java.security.AccessController;
@@ -23,46 +41,6 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Map;
-
-import org.drools.core.base.BaseClassFieldReader;
-import org.drools.core.base.BaseClassFieldWriter;
-import org.drools.core.base.ClassFieldAccessorCache.CacheEntry;
-import org.drools.core.base.ClassFieldInspector;
-import org.drools.core.base.FieldAccessorFactory;
-import org.drools.core.base.ValueType;
-import org.drools.core.base.extractors.BaseObjectClassFieldReader;
-import org.drools.core.base.extractors.SelfReferenceClassFieldReader;
-import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.util.Drools;
-import org.drools.mvel.accessors.BaseBooleanClassFieldReader;
-import org.drools.mvel.accessors.BaseBooleanClassFieldWriter;
-import org.drools.mvel.accessors.BaseByteClassFieldReader;
-import org.drools.mvel.accessors.BaseByteClassFieldWriter;
-import org.drools.mvel.accessors.BaseCharClassFieldReader;
-import org.drools.mvel.accessors.BaseCharClassFieldWriter;
-import org.drools.mvel.accessors.BaseDateClassFieldReader;
-import org.drools.mvel.accessors.BaseDoubleClassFieldReader;
-import org.drools.mvel.accessors.BaseDoubleClassFieldWriter;
-import org.drools.mvel.accessors.BaseFloatClassFieldReader;
-import org.drools.mvel.accessors.BaseFloatClassFieldWriter;
-import org.drools.mvel.accessors.BaseIntClassFieldReader;
-import org.drools.mvel.accessors.BaseIntClassFieldWriter;
-import org.drools.mvel.accessors.BaseLocalDateClassFieldReader;
-import org.drools.mvel.accessors.BaseLocalDateTimeClassFieldReader;
-import org.drools.mvel.accessors.BaseLongClassFieldReader;
-import org.drools.mvel.accessors.BaseLongClassFieldWriter;
-import org.drools.mvel.accessors.BaseNumberClassFieldReader;
-import org.drools.mvel.accessors.BaseObjectClassFieldWriter;
-import org.drools.mvel.accessors.BaseShortClassFieldReader;
-import org.drools.mvel.accessors.BaseShortClassFieldWriter;
-import org.drools.mvel.accessors.BaseZonedDateTimeClassFieldReader;
-import org.drools.wiring.api.util.ByteArrayClassLoader;
-import org.mvel2.asm.ClassWriter;
-import org.mvel2.asm.Label;
-import org.mvel2.asm.MethodVisitor;
-import org.mvel2.asm.Opcodes;
-import org.mvel2.asm.Type;
 
 import static org.drools.mvel.accessors.ClassFieldAccessorStore.getClassFieldInspector;
 import static org.drools.mvel.asm.ClassGenerator.createClassWriter;
@@ -86,7 +64,7 @@ public class ClassFieldAccessorFactory implements FieldAccessorFactory {
     }
 
     @Override
-    public BaseClassFieldReader getClassFieldReader( Class< ? > clazz, String fieldName, CacheEntry cache) {
+    public BaseClassFieldReader getClassFieldReader(Class< ? > clazz, String fieldName, CacheEntry cache) {
         try {
             // if it is a self reference
             if ( SELF_REFERENCE_FIELD.equals( fieldName ) ) {
@@ -337,8 +315,7 @@ public class ClassFieldAccessorFactory implements FieldAccessorFactory {
         final Class< ? > fieldType = getterMethod.getReturnType();
         Method overridingMethod;
         try {
-            overridingMethod = superClass.getMethod( getOverridingGetMethodName( fieldType ),
-                                                     ReteEvaluator.class, Object.class );
+            overridingMethod = superClass.getMethod( getOverridingGetMethodName( fieldType ), ValueResolver.class, Object.class );
         } catch ( final Exception e ) {
             throw new RuntimeException( "This is a bug. Please report back to JBoss Rules team.",
                                         e );

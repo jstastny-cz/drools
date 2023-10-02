@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel;
 
 import java.util.ArrayDeque;
@@ -1020,6 +1022,7 @@ public class PropertyReactivityTest extends BaseModelTest {
 
     public static class Fact {
         private int a;
+        private int b;
         private String result;
 
         public int getA() {
@@ -1030,12 +1033,32 @@ public class PropertyReactivityTest extends BaseModelTest {
             this.a = a;
         }
 
+        public int getB() {
+            return b;
+        }
+
+        public void setB(int b) {
+            this.b = b;
+        }
+
         public String getResult() {
             return result;
         }
 
         public void setResult(String result) {
             this.result = result;
+        }
+    }
+
+    public static class AnotherFact {
+        private int a;
+
+        public int getA() {
+            return a;
+        }
+
+        public void setA(int a) {
+            this.a = a;
         }
     }
 
@@ -1116,6 +1139,87 @@ public class PropertyReactivityTest extends BaseModelTest {
                 .as("'$id' is resolved as property 'a'. Hence, no class reactive, so the rule shouldn't loop")
                 .isEqualTo(1);
         assertThat(bigString.getResult()).isEqualTo("OK");
+    }
+
+    @Test
+    public void externalFunctionWithBindVariableFromAnotherPatternOfSameType_shouldTriggerClassReactive() {
+        // DROOLS-7398
+        final String str =
+                "import " + Fact.class.getCanonicalName() + ";\n" +
+                           "import static " + PropertyReactivityTest.class.getCanonicalName() + ".*;\n" +
+                           "rule R when\n" +
+                           "    $fact1 : Fact( $id : a )\n" +
+                           "    $fact2 : Fact( convertToString($id) == \"BIG\" )\n" +
+                           "then\n" +
+                           "    modify($fact2) { setResult(\"OK\") };\n" +
+                           "end\n";
+
+        KieSession ksession = getKieSession(str);
+
+        Fact bigStringFact = new Fact();
+        bigStringFact.setA(99999);
+        bigStringFact.setResult("NG");
+        ksession.insert(bigStringFact);
+        int fired = ksession.fireAllRules(10); // intentional loop
+
+        assertThat(fired).as("$id comes from a different pattern, so it triggers class reactivity, not property reactivity.")
+                         .isEqualTo(10);
+    }
+
+    @Test
+    public void multipleExternalFunctionsWithBindVariablesFromAnotherPatternOfSameType_shouldTriggerClassReactive() {
+        // DROOLS-7398
+        final String str =
+                "import " + Fact.class.getCanonicalName() + ";\n" +
+                           "import static " + PropertyReactivityTest.class.getCanonicalName() + ".*;\n" +
+                           "rule R when\n" +
+                           "    $fact1 : Fact( $id_a : a, $id_b : b )\n" +
+                           "    $fact2 : Fact( convertToString($id_a) == convertToString($id_b) )\n" +
+                           "then\n" +
+                           "    modify($fact2) { setResult(\"OK\") };\n" +
+                           "end\n";
+
+        KieSession ksession = getKieSession(str);
+
+        Fact bigStringFact = new Fact();
+        bigStringFact.setA(99999);
+        bigStringFact.setB(99999);
+        bigStringFact.setResult("NG");
+        ksession.insert(bigStringFact);
+        int fired = ksession.fireAllRules(10); // intentional loop
+
+        assertThat(fired).as("$id comes from a different pattern, so it triggers class reactivity, not property reactivity.")
+                         .isEqualTo(10);
+    }
+
+    @Test
+    public void externalFunctionWithBindVariableFromAnotherPatternOfDifferentType_shouldTriggerClassReactive() {
+        // DROOLS-7390
+        final String str =
+                "import " + Fact.class.getCanonicalName() + ";\n" +
+                        "import " + AnotherFact.class.getCanonicalName() + ";\n" +
+                           "import static " + PropertyReactivityTest.class.getCanonicalName() + ".*;\n" +
+                           "rule R when\n" +
+                           "    $fact1 : AnotherFact( $id : a )\n" +
+                           "    $fact2 : Fact( convertToString($id) == \"BIG\" )\n" +
+                           "then\n" +
+                           "    modify($fact2) { setResult(\"OK\") };\n" +
+                           "end\n";
+
+        KieSession ksession = getKieSession(str);
+
+        AnotherFact bigStringAnotherFact = new AnotherFact();
+        bigStringAnotherFact.setA(99999);
+        ksession.insert(bigStringAnotherFact);
+
+        Fact smallStringFact = new Fact();
+        smallStringFact.setA(1);
+        smallStringFact.setResult("NG");
+        ksession.insert(smallStringFact);
+        int fired = ksession.fireAllRules(10); // intentional loop
+
+        assertThat(fired).as("$id comes from a different pattern, so it triggers class reactivity, not property reactivity.")
+                         .isEqualTo(10);
     }
 
     @Test

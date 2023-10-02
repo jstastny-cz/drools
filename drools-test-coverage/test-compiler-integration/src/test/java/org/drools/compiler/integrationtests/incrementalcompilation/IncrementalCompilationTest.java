@@ -1,43 +1,29 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.integrationtests.incrementalcompilation;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.drools.commands.runtime.rule.FireAllRulesCommand;
 import org.drools.compiler.kie.builder.impl.DrlProject;
 import org.drools.core.ClassObjectFilter;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.event.DefaultAgendaEventListener;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.EntryPointNode;
 import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.Rete;
@@ -88,6 +74,23 @@ import org.kie.api.runtime.rule.FactHandle;
 import org.kie.internal.builder.IncrementalResults;
 import org.kie.internal.builder.InternalKieBuilder;
 import org.kie.internal.command.CommandFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -679,8 +682,8 @@ public class IncrementalCompilationTest {
         assertThat(rules.get("R2")).isNotNull();
         assertThat(rules.get("R3")).isNotNull();
 
-        final RuleTerminalNode rtn1_1 = (RuleTerminalNode) ((RuleBase) kc.getKieBase()).getReteooBuilder().getTerminalNodes("org.drools.compiler.R1")[0];
-        final RuleTerminalNode rtn3_1 = (RuleTerminalNode) ((RuleBase) kc.getKieBase()).getReteooBuilder().getTerminalNodes("org.drools.compiler.R3")[0];
+        final RuleTerminalNode rtn1_1 = (RuleTerminalNode) ((InternalRuleBase) kc.getKieBase()).getReteooBuilder().getTerminalNodes("org.drools.compiler.R1")[0];
+        final RuleTerminalNode rtn3_1 = (RuleTerminalNode) ((InternalRuleBase) kc.getKieBase()).getReteooBuilder().getTerminalNodes("org.drools.compiler.R3")[0];
 
         // Create a new jar for version 1.1.0
         final ReleaseId releaseId2 = ks.newReleaseId("org.kie", "test-upgrade", "1.1.0");
@@ -688,7 +691,7 @@ public class IncrementalCompilationTest {
         // try to update the container to version 1.1.0
         kc.updateToVersion(releaseId2);
 
-        final RuleBase rb_2 = ((RuleBase) kc.getKieBase());
+        final InternalRuleBase rb_2 = ((InternalRuleBase) kc.getKieBase());
 
         final RuleTerminalNode rtn1_2 = (RuleTerminalNode) rb_2.getReteooBuilder().getTerminalNodes("org.drools.compiler.R1")[0];
         final RuleTerminalNode rtn3_2 = (RuleTerminalNode) rb_2.getReteooBuilder().getTerminalNodes("org.drools.compiler.R3")[0];
@@ -5069,5 +5072,158 @@ public class IncrementalCompilationTest {
 
         ksession.insert("test");
         assertThat(ksession.fireAllRules()).isEqualTo(1);
+    }
+
+    @Test
+    public void testReaddAllRulesWithComplexNodeSharing() {
+        // DROOLS-7430
+        final String drl1 =
+                "import " + Message.class.getCanonicalName() + ";\n" +
+                "\n" +
+                "global java.util.List fired;\n" +
+                "\n" +
+                "rule R1 when\n" +
+                "    Message()\n" +
+                "    Integer(this == 1)\n" +
+                "then\n" +
+                "    fired.add(drools.getRule().getName());\n" +
+                "end\n" +
+                "\n" +
+                "rule R2 when\n" +
+                "    $s : Message()\n" +
+                "    and\n" +
+                "    (\n" +
+                "     Integer(this == 2)\n" +
+                "    or\n" +
+                "     Integer(this == 3) and not ( String( toString == $s.message ) )\n" +
+                "    )\n" +
+                "then\n" +
+                "     fired.add(drools.getRule().getName());\n" +
+                "end\n" +
+                "\n" +
+                "rule R3 when\n" +
+                "    $s : Message()\n" +
+                "    Integer()\n" +
+                "    not ( String( toString == $s.message ) )\n" +
+                "then\n" +
+                "    fired.add(drools.getRule().getName());\n" +
+                "end\n";
+
+        final String drl2 =
+                "import " + Message.class.getCanonicalName() + ";\n" +
+                "\n" +
+                "global java.util.List fired;\n" +
+                "\n" +
+                "rule R4 when\n" +
+                "    Message()\n" +
+                "    Integer(this == 1)\n" +
+                "then\n" +
+                "    fired.add(drools.getRule().getName());\n" +
+                "end\n" +
+                "\n" +
+                "rule R5 when\n" +
+                "    $s : Message()\n" +
+                "    and\n" +
+                "    (\n" +
+                "     Integer(this == 2)\n" +
+                "    or\n" +
+                "     Integer(this == 3) and not ( String( toString == $s.message ) )\n" +
+                "    )\n" +
+                "then\n" +
+                "     fired.add(drools.getRule().getName());\n" +
+                "end\n" +
+                "\n" +
+                "rule R6 when\n" +
+                "    $s : Message()\n" +
+                "    Integer()\n" +
+                "    not ( String( toString == $s.message ) )\n" +
+                "then\n" +
+                "    fired.add(drools.getRule().getName());\n" +
+                "end\n";
+
+        final KieServices ks = KieServices.Factory.get();
+
+        final ReleaseId releaseId1 = ks.newReleaseId("org.kie", "test-upgrade", "1.0.0");
+        KieUtil.getKieModuleFromDrls(releaseId1, kieBaseTestConfiguration, drl1);
+
+        final KieContainer kc = ks.newKieContainer(releaseId1);
+        KieSession ksession = kc.newKieSession();
+
+        List<String> fired = new ArrayList<>();
+        ksession.setGlobal("fired", fired);
+
+        ksession.insert(new Message("test"));
+        ksession.insert(0);
+
+        assertThat(ksession.fireAllRules()).isEqualTo(1);
+        assertThat(fired).containsExactly("R3");
+
+        final ReleaseId releaseId2 = ks.newReleaseId("org.kie", "test-upgrade", "1.1.0");
+        KieUtil.getKieModuleFromDrls(releaseId2, kieBaseTestConfiguration, drl2);
+
+        kc.updateToVersion(releaseId2);
+
+        fired.clear();
+
+        assertThat(ksession.fireAllRules()).isEqualTo(1);
+        assertThat(fired).containsExactly("R6");
+    }
+
+    @Test
+    public void testReaddAllRulesWithIdenticalRules() {
+        // DROOLS-7462
+
+        final String drl1 =
+                "import " + Message.class.getCanonicalName() + ";\n" +
+                "\n" +
+                "rule R1 when\n" +
+                "    $m: Message()\n" +
+                "    exists String(toString == $m.message)\n" +
+                "then\n" +
+                "end\n" +
+                "\n" +
+                "rule R2 when\n" +
+                "    $m: Message()\n" +
+                "    exists String(toString == $m.message)\n" +
+                "then\n" +
+                "end\n";
+
+        final String drl2 =
+                "import " + Message.class.getCanonicalName() + ";\n" +
+                "\n" +
+                "rule R3 when\n" +
+                "    $m: Message()\n" +
+                "    exists String(toString == $m.message)\n" +
+                "then\n" +
+                "end\n" +
+                "\n" +
+                "rule R4 when\n" +
+                "    $m: Message()\n" +
+                "    exists String(toString == $m.message)\n" +
+                "then\n" +
+                "end\n";
+
+        final KieServices ks = KieServices.Factory.get();
+
+        final ReleaseId releaseId1 = ks.newReleaseId("org.kie", "test-upgrade", "1.0.0");
+        KieUtil.getKieModuleFromDrls(releaseId1, kieBaseTestConfiguration, drl1);
+
+        final KieContainer kc = ks.newKieContainer(releaseId1);
+        KieSession ksession = kc.newKieSession();
+
+        ksession.insert(new Message("test1"));
+        ksession.insert("test1");
+        ksession.insert(new Message("test2"));
+        ksession.insert("test2");
+
+        int fired = ksession.fireAllRules();
+        assertThat(fired).isEqualTo(4);
+
+        final ReleaseId releaseId2 = ks.newReleaseId("org.kie", "test-upgrade", "1.1.0");
+        KieUtil.getKieModuleFromDrls(releaseId2, kieBaseTestConfiguration, drl2);
+
+        kc.updateToVersion(releaseId2);
+        fired = ksession.fireAllRules();
+        assertThat(fired).isEqualTo(4);
     }
 }

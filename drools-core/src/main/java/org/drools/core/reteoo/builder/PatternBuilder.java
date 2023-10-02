@@ -1,57 +1,60 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo.builder;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.drools.core.base.ClassObjectType;
-import org.drools.core.base.DroolsQuery;
+import org.drools.base.base.ClassObjectType;
+import org.drools.base.base.DroolsQuery;
+import org.drools.base.base.ObjectType;
+import org.drools.base.rule.Accumulate;
+import org.drools.base.rule.Behavior;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.IntervalProviderConstraint;
+import org.drools.base.rule.InvalidPatternException;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.PatternSource;
+import org.drools.base.rule.RuleConditionElement;
+import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.rule.WindowReference;
+import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.constraint.Constraint;
+import org.drools.base.rule.constraint.XpathConstraint;
+import org.drools.base.time.impl.Timer;
 import org.drools.core.reteoo.CoreComponentFactory;
 import org.drools.core.reteoo.EntryPointNode;
 import org.drools.core.reteoo.ObjectTypeNode;
 import org.drools.core.reteoo.WindowNode;
-import org.drools.core.rule.Accumulate;
-import org.drools.core.rule.Behavior;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.EntryPointId;
-import org.drools.core.rule.GroupElement;
-import org.drools.core.rule.IntervalProviderConstraint;
-import org.drools.core.rule.InvalidPatternException;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.PatternSource;
-import org.drools.core.rule.RuleConditionElement;
-import org.drools.core.rule.TypeDeclaration;
-import org.drools.core.rule.WindowReference;
-import org.drools.core.rule.constraint.XpathConstraint;
-import org.drools.core.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.core.rule.constraint.BetaNodeFieldConstraint;
-import org.drools.core.rule.constraint.Constraint;
-import org.drools.core.base.ObjectType;
+import org.drools.core.rule.BehaviorRuntime;
 import org.drools.core.time.impl.CompositeMaxDurationTimer;
 import org.drools.core.time.impl.DurationTimer;
-import org.drools.core.time.impl.Timer;
 import org.kie.api.conf.EventProcessingOption;
 import org.kie.api.definition.type.Expires.Policy;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.drools.base.rule.TypeDeclaration.NEVER_EXPIRES;
 import static org.drools.core.reteoo.builder.GroupElementBuilder.AndBuilder.buildJoinNode;
 import static org.drools.core.reteoo.builder.GroupElementBuilder.AndBuilder.buildTupleSource;
-import static org.drools.core.rule.TypeDeclaration.NEVER_EXPIRES;
-
 /**
  * A builder for patterns
  */
@@ -124,14 +127,15 @@ public class PatternBuilder
     }
 
     private void buildBehaviors(BuildContext context, BuildUtils utils, Pattern pattern, Constraints constraints) {
-        final List<Behavior> behaviors = pattern.getBehaviors();
         if ( pattern.getSource() == null ||
-                ( !( pattern.getSource() instanceof WindowReference) &&
-                  ( context.getCurrentEntryPoint() != EntryPointId.DEFAULT || ! behaviors.isEmpty() ) ) ){
+             ( !( pattern.getSource() instanceof WindowReference) &&
+               ( context.getCurrentEntryPoint() != EntryPointId.DEFAULT || !pattern.getBehaviors().isEmpty() ) ) ){
             attachObjectTypeNode( context, utils, pattern );
         }
 
-        if( ! behaviors.isEmpty() ) {
+        if( !pattern.getBehaviors().isEmpty() ) {
+            final List<BehaviorRuntime> behaviors = pattern.getBehaviors().stream().map(BehaviorRuntime.class::cast).collect(Collectors.toList());
+
             // build the window node:
             WindowNode wn = CoreComponentFactory.get().getNodeFactoryService().buildWindowNode( context.getNextNodeId(),
                                                                                                    constraints.alphaConstraints,
@@ -329,14 +333,12 @@ public class PatternBuilder
     }
 
     private void attachObjectTypeNode( final BuildContext context, final BuildUtils utils, final Pattern pattern ) {
-        boolean objectMemory = context.isObjectTypeNodeMemoryEnabled();
         ObjectType objectType = pattern.getObjectType();
         
         if ( pattern.getObjectType() instanceof ClassObjectType ) {
             // Is this the query node, if so we don't want any memory
-            if ( DroolsQuery.class == ((ClassObjectType) pattern.getObjectType()).getClassType() ) {
+            if (DroolsQuery.class == ((ClassObjectType) pattern.getObjectType()).getClassType() ) {
                 context.setTupleMemoryEnabled( false );
-                context.setObjectTypeNodeMemoryEnabled( false );
             }
         }
 
@@ -365,7 +367,7 @@ public class PatternBuilder
                 }
 
                 long distance = context.getExpirationOffset( pattern );
-                if( distance == NEVER_EXPIRES ) {
+                if ( distance == NEVER_EXPIRES ) {
                     // it means the rules have no temporal constraints, or
                     // the constraints require events to be hold forever. In this 
                     // case, we allow type declarations to override the implicit 
@@ -379,7 +381,6 @@ public class PatternBuilder
         }
 
         context.setObjectSource( utils.attachNode( context, otn ) );
-        context.setObjectTypeNodeMemoryEnabled( objectMemory );
     }
 
     /**

@@ -1,54 +1,55 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
+
+import org.drools.base.InitialFact;
+import org.drools.base.base.ClassObjectType;
+import org.drools.base.base.ObjectType;
+import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.time.JobHandle;
+import org.drools.core.common.DefaultFactHandle;
+import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.InternalWorkingMemory;
+import org.drools.core.common.PropagationContext;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.common.UpdateContext;
+import org.drools.core.impl.InternalRuleBase;
+import org.drools.core.impl.WorkingMemoryReteExpireAction;
+import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.core.time.Job;
+import org.drools.core.time.JobContext;
+import org.drools.core.time.impl.DefaultJobHandle;
+import org.drools.util.bitmask.BitMask;
+import org.drools.util.bitmask.EmptyBitMask;
 
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.drools.core.InitialFact;
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.base.ClassObjectType;
-import org.drools.core.base.ValueType;
-import org.drools.core.common.DefaultFactHandle;
-import org.drools.core.common.FactHandleClassStore;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.Memory;
-import org.drools.core.common.MemoryFactory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.RuleBasePartitionId;
-import org.drools.core.common.UpdateContext;
-import org.drools.core.impl.WorkingMemoryReteExpireAction;
-import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.rule.EntryPointId;
-import org.drools.core.base.ObjectType;
-import org.drools.core.common.PropagationContext;
-import org.drools.core.time.Job;
-import org.drools.core.time.JobContext;
-import org.drools.core.time.JobHandle;
-import org.drools.core.util.bitmask.BitMask;
-import org.drools.core.util.bitmask.EmptyBitMask;
-
-import static org.drools.core.rule.TypeDeclaration.NEVER_EXPIRES;
+import static org.drools.base.rule.TypeDeclaration.NEVER_EXPIRES;
 
 /**
  * <code>ObjectTypeNodes<code> are responsible for filtering and propagating the matching
@@ -64,10 +65,8 @@ import static org.drools.core.rule.TypeDeclaration.NEVER_EXPIRES;
  *
  * @see Rete
  */
-public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFactory<ObjectTypeNode.ObjectTypeNodeMemory> {
-    // ------------------------------------------------------------
-    // Instance members
-    // ------------------------------------------------------------
+public class ObjectTypeNode extends ObjectSource implements ObjectSink {
+
 
     private static final long serialVersionUID = 510l;
 
@@ -76,9 +75,7 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
      */
     protected ObjectType objectType;
 
-    private boolean objectMemoryEnabled;
-
-    private long                            expirationOffset = -1;
+    private long expirationOffset = -1;
 
     /* always dirty after serialisation */
     private transient volatile boolean dirty;
@@ -107,24 +104,25 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
                           final BuildContext context) {
         super(id,
               RuleBasePartitionId.MAIN_PARTITION,
-              context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation(),
               source,
               context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeHashingThreshold(),
               context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeRangeIndexThreshold());
         this.objectType = objectType;
-        idGenerator = new IdGenerator(id);
-
-        setObjectMemoryEnabled(context.isObjectTypeNodeMemoryEnabled());
-
+        this.idGenerator = new IdGenerator(id);
         this.dirty = true;
-
-        hashcode = calculateHashCode();
-
-        if (objectType != ClassObjectType.InitialFact_ObjectType && context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation()) {
-            this.sink = new CompositePartitionAwareObjectSinkAdapter();
-        }
-
+        this.hashcode = calculateHashCode();
         initMemoryId( context );
+    }
+
+    public void setupParallelExecution(InternalRuleBase kbase) {
+        if (objectType == ClassObjectType.InitialFact_ObjectType) {
+            return;
+        }
+        CompositePartitionAwareObjectSinkAdapter partitionedSink = new CompositePartitionAwareObjectSinkAdapter(kbase.getParallelEvaluationSlotsCount());
+        for ( ObjectSink objectSink : this.sink.getSinks()) {
+            partitionedSink.addObjectSink(objectSink, alphaNodeHashingThreshold, alphaNodeRangeIndexThreshold);
+        }
+        this.sink = partitionedSink;
     }
 
     private static class IdGenerator {
@@ -218,11 +216,6 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
     public void assertInitialFact(final InternalFactHandle factHandle,
                                   final PropagationContext context,
                                   final ReteEvaluator reteEvaluator) {
-        if (objectMemoryEnabled) {
-            InitialFactObjectTypeNodeMemory memory = (InitialFactObjectTypeNodeMemory) reteEvaluator.getNodeMemory(this);
-            memory.add(factHandle);
-        }
-
         checkDirty();
         propagateAssert(factHandle, context, reteEvaluator);
     }
@@ -343,12 +336,8 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
     }
 
     @Override
-    public void modifyObject(InternalFactHandle factHandle,
-                             ModifyPreviousTuples modifyPreviousTuples,
-                             PropagationContext context,
-                             ReteEvaluator reteEvaluator) {
+    public void modifyObject(InternalFactHandle factHandle, ModifyPreviousTuples modifyPreviousTuples, PropagationContext context, ReteEvaluator reteEvaluator) {
         checkDirty();
-
         this.sink.propagateModifyObject(factHandle,
                                         modifyPreviousTuples,
                                         context.adaptModificationMaskForObjectType(objectType, reteEvaluator),
@@ -356,18 +345,24 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
     }
 
     @Override
-    public void updateSink(final ObjectSink sink,
-                           final PropagationContext context,
-                           final InternalWorkingMemory workingMemory) {
+    public void updateSink(ObjectSink sink, PropagationContext context, InternalWorkingMemory workingMemory) {
         checkDirty();
-
-        // Regular updateSink
-        final ObjectTypeNodeMemory memory = workingMemory.getNodeMemory(this);
-        Iterator<InternalFactHandle> it = memory.iterator();
-
-        while (it.hasNext()) {
-            sink.assertObject(it.next(), context, workingMemory);
+        Class<?> classType = ((ClassObjectType) getObjectType()).getClassType();
+        if (InitialFact.class.isAssignableFrom(classType)) {
+            sink.assertObject(workingMemory.getInitialFactHandle(), context, workingMemory);
+        } else {
+            Iterator<InternalFactHandle> it = workingMemory.getStoreForClass(classType).iterator();
+            while (it.hasNext()) {
+                sink.assertObject(it.next(), context, workingMemory);
+            }
         }
+    }
+
+    public Iterator<InternalFactHandle> getFactHandlesIterator(InternalWorkingMemory workingMemory) {
+        Class<?> classType = ((ClassObjectType) getObjectType()).getClassType();
+        return InitialFact.class.isAssignableFrom(classType) ?
+                Collections.singleton(workingMemory.getInitialFactHandle()).iterator() :
+                workingMemory.getStoreForClass(classType).iterator();
     }
 
     /**
@@ -435,31 +430,6 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
         return false;
     }
 
-    /**
-     * Creates memory for the node using PrimitiveLongMap as its optimised for storage and reteivals of Longs.
-     * However PrimitiveLongMap is not ideal for spase data. So it should be monitored incase its more optimal
-     * to switch back to a standard HashMap.
-     */
-    @Override
-    public ObjectTypeNodeMemory createMemory(final RuleBaseConfiguration config, ReteEvaluator reteEvaluator) {
-        if (objectType.isTemplate()) {
-            throw new UnsupportedOperationException("this method is used only for the initial fact and during incremental compilation which is not supported yet for fact templates");
-        }
-        Class<?> classType = ((ClassObjectType) objectType).getClassType();
-        if (InitialFact.class.isAssignableFrom(classType)) {
-            return new InitialFactObjectTypeNodeMemory(classType);
-        }
-        return new ObjectTypeNodeMemory(classType, reteEvaluator);
-    }
-
-    public boolean isObjectMemoryEnabled() {
-        return this.objectMemoryEnabled;
-    }
-
-    public void setObjectMemoryEnabled(boolean objectMemoryEnabled) {
-        this.objectMemoryEnabled = objectMemoryEnabled;
-    }
-
     @Override
     public String toString() {
         return "[ObjectTypeNode(" + this.id + ")::" + ((EntryPointNode) this.source).getEntryPoint() + " objectType=" + this.objectType + " expiration=" + this.getExpirationOffset() + "ms ]";
@@ -496,15 +466,6 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
 
     public void setExpirationOffset(long expirationOffset) {
         this.expirationOffset = expirationOffset;
-        if (!this.objectType.getValueType().equals(ValueType.QUERY_TYPE)) {
-            if (expirationOffset > 0) {
-                // override memory enabled settings
-                this.setObjectMemoryEnabled(true);
-            } else if (expirationOffset == 0) {
-                // disable memory
-                this.setObjectMemoryEnabled(false);
-            }
-        }
     }
 
     public void mergeExpirationOffset(ObjectTypeNode other) {
@@ -515,13 +476,14 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
 
     public static class ExpireJob
             implements
-            Job {
+            Job, Serializable {
 
         @Override
         public void execute(JobContext ctx) {
             ExpireJobContext context = (ExpireJobContext) ctx;
+
             context.reteEvaluator.addPropagation(context.expireAction);
-            context.getExpireAction().getFactHandle().removeJob( context.getJobHandle());
+            context.getExpireAction().getFactHandle().removeJob( (DefaultJobHandle) context.getJobHandle());
         }
     }
 
@@ -529,9 +491,12 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
             implements
             JobContext,
             Externalizable {
-        public final WorkingMemoryReteExpireAction expireAction;
-        public final ReteEvaluator         reteEvaluator;
+        public WorkingMemoryReteExpireAction expireAction;
+        public transient ReteEvaluator         reteEvaluator;
         public JobHandle                     handle;
+
+        public ExpireJobContext() {
+        }
 
         public ExpireJobContext(WorkingMemoryReteExpireAction expireAction,
                                 ReteEvaluator reteEvaluator) {
@@ -558,6 +523,10 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
             return reteEvaluator;
         }
 
+        public void setReteEvaluator(ReteEvaluator reteEvaluator) {
+            this.reteEvaluator = reteEvaluator;
+        }
+
         public JobHandle getHandle() {
             return handle;
         }
@@ -569,13 +538,14 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
         @Override
         public void readExternal(ObjectInput in) throws IOException,
                                                         ClassNotFoundException {
-            //this.behavior = (O)
+            this.expireAction = (WorkingMemoryReteExpireAction) in.readObject();
+            this.handle = (JobHandle) in.readObject();
         }
 
         @Override
         public void writeExternal(ObjectOutput out) throws IOException {
-            // TODO Auto-generated method stub
-
+            out.writeObject(expireAction);
+            out.writeObject(handle);
         }
     }
 
@@ -585,94 +555,5 @@ public class ObjectTypeNode extends ObjectSource implements ObjectSink, MemoryFa
                                        PropagationContext context,
                                        ReteEvaluator reteEvaluator) {
         throw new UnsupportedOperationException("This should never get called, as the PropertyReactive first happens at the AlphaNode");
-    }
-
-
-    public static class ObjectTypeNodeMemory implements Memory {
-        private FactHandleClassStore store;
-        private Class<?> classType;
-
-        ObjectTypeNodeMemory(Class<?> classType) {
-            this.classType = classType;
-        }
-
-        ObjectTypeNodeMemory(Class<?> classType, ReteEvaluator reteEvaluator) {
-            this(classType);
-            store = reteEvaluator.getStoreForClass(classType);
-        }
-
-        @Override
-        public short getNodeType() {
-            return NodeTypeEnums.ObjectTypeNode;
-        }
-
-        public Iterator<InternalFactHandle> iterator() {
-            return store.iterator();
-        }
-
-        @Override
-        public SegmentMemory getSegmentMemory() {
-            return null;
-        }
-
-        @Override
-        public void setSegmentMemory(SegmentMemory segmentMemory) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Memory getPrevious() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setPrevious(Memory previous) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void nullPrevNext() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setNext(Memory next) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Memory getNext() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void reset() { }
-
-        @Override
-        public String toString() {
-            return "ObjectTypeMemory for " + classType;
-        }
-    }
-
-    public static class InitialFactObjectTypeNodeMemory extends ObjectTypeNodeMemory {
-        private List<InternalFactHandle> list = Collections.emptyList();
-
-        InitialFactObjectTypeNodeMemory(Class<?> classType) {
-            super(classType);
-        }
-
-        public void add(InternalFactHandle factHandle) {
-            list = Collections.singletonList( factHandle );
-        }
-
-        @Override
-        public Iterator<InternalFactHandle> iterator() {
-            return list.iterator();
-        }
-
-        @Override
-        public void reset() {
-            list = Collections.emptyList();
-        }
     }
 }

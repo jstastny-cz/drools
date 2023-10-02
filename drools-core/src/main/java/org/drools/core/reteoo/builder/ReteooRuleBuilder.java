@@ -1,59 +1,61 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo.builder;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import org.drools.base.base.ClassObjectType;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.Accumulate;
+import org.drools.base.rule.AsyncReceive;
+import org.drools.base.rule.AsyncSend;
+import org.drools.base.rule.Collect;
+import org.drools.base.rule.ConditionalBranch;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.EvalCondition;
+import org.drools.base.rule.Forall;
+import org.drools.base.rule.From;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.InvalidPatternException;
+import org.drools.base.rule.LogicTransformer;
+import org.drools.base.rule.NamedConsequence;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.QueryElement;
+import org.drools.base.rule.WindowDeclaration;
+import org.drools.base.rule.WindowReference;
+import org.drools.base.rule.constraint.XpathConstraint;
+import org.drools.base.time.impl.Timer;
 import org.drools.core.ActivationListenerFactory;
-import org.drools.core.base.ClassObjectType;
 import org.drools.core.common.BaseNode;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.UpdateContext;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.phreak.PhreakBuilder;
 import org.drools.core.reteoo.PathEndNode;
 import org.drools.core.reteoo.RightInputAdapterNode;
 import org.drools.core.reteoo.RuleBuilder;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.reteoo.WindowNode;
-import org.drools.core.rule.Accumulate;
-import org.drools.core.rule.AsyncReceive;
-import org.drools.core.rule.AsyncSend;
-import org.drools.core.rule.Collect;
-import org.drools.core.rule.ConditionalBranch;
-import org.drools.core.rule.EntryPointId;
-import org.drools.core.rule.EvalCondition;
-import org.drools.core.rule.Forall;
-import org.drools.core.rule.From;
-import org.drools.core.rule.GroupElement;
-import org.drools.core.rule.InvalidPatternException;
-import org.drools.core.rule.LogicTransformer;
-import org.drools.core.rule.NamedConsequence;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.QueryElement;
-import org.drools.core.rule.WindowDeclaration;
-import org.drools.core.rule.WindowReference;
-import org.drools.core.rule.constraint.XpathConstraint;
 import org.drools.core.time.TemporalDependencyMatrix;
-import org.drools.core.time.impl.Timer;
 import org.kie.api.conf.EventProcessingOption;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class ReteooRuleBuilder implements RuleBuilder {
 
@@ -108,7 +110,7 @@ public class ReteooRuleBuilder implements RuleBuilder {
      * @return a List<BaseNode> of terminal nodes for the rule             
      * @throws InvalidPatternException
      */
-    public List<TerminalNode> addRule( RuleImpl rule, RuleBase kBase, Collection<InternalWorkingMemory> workingMemories ) throws InvalidPatternException {
+    public List<TerminalNode> addRule(RuleImpl rule, InternalRuleBase kBase, Collection<InternalWorkingMemory> workingMemories) throws InvalidPatternException {
 
         // the list of terminal nodes
         final List<TerminalNode> termNodes = new ArrayList<>();
@@ -130,10 +132,8 @@ public class ReteooRuleBuilder implements RuleBuilder {
 
             if (kBase.getRuleBaseConfiguration().isSequential() ) {
                 context.setTupleMemoryEnabled( false );
-                context.setObjectTypeNodeMemoryEnabled( false );
             } else {
                 context.setTupleMemoryEnabled( true );
-                context.setObjectTypeNodeMemoryEnabled( true );
             }
 
             // adds subrule
@@ -208,7 +208,7 @@ public class ReteooRuleBuilder implements RuleBuilder {
 
     private static void attachTerminalNode(BuildContext context, TerminalNode terminalNode) {
         context.getTerminals().add(terminalNode);
-        context.setTerminated(true);
+        context.terminate();
 
         BaseNode baseTerminalNode = (BaseNode) terminalNode;
         context.getNodes().add(baseTerminalNode);
@@ -256,7 +256,7 @@ public class ReteooRuleBuilder implements RuleBuilder {
                           pattern );
     }
 
-    public void addEntryPoint( final String id, final RuleBase kBase, Collection<InternalWorkingMemory> workingMemories ) {
+    public void addEntryPoint(final String id, final InternalRuleBase kBase, Collection<InternalWorkingMemory> workingMemories) {
         // creates a clean build context for each subrule
         final BuildContext context = new BuildContext( kBase, workingMemories );
         EntryPointId ep = new EntryPointId( id );
@@ -264,12 +264,11 @@ public class ReteooRuleBuilder implements RuleBuilder {
         builder.build(context, utils, ep);
     }
 
-    public WindowNode addWindowNode( WindowDeclaration window, RuleBase kBase, Collection<InternalWorkingMemory> workingMemories ) {
+    public WindowNode addWindowNode(WindowDeclaration window, InternalRuleBase kBase, Collection<InternalWorkingMemory> workingMemories) {
 
         // creates a clean build context for each subrule
         BuildContext context = new BuildContext( kBase, workingMemories );
         context.setTupleMemoryEnabled( !kBase.getRuleBaseConfiguration().isSequential() );
-        context.setObjectTypeNodeMemoryEnabled( !kBase.getRuleBaseConfiguration().isSequential() );
 
         // builds and attach
         WindowBuilder.INSTANCE.build( context, this.utils, window );

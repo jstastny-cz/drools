@@ -1,9 +1,27 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.compiler.rule.builder.util;
 
-import org.drools.core.base.ClassObjectType;
-import org.drools.core.rule.Pattern;
-import org.drools.core.base.ObjectType;
-import org.drools.core.util.index.IndexUtil;
+import org.drools.base.base.ClassObjectType;
+import org.drools.base.rule.Pattern;
+import org.drools.base.base.ObjectType;
+import org.drools.base.util.index.ConstraintTypeOperator;
 import org.drools.drl.ast.descr.BaseDescr;
 import org.drools.drl.ast.descr.OperatorDescr;
 import org.drools.drl.ast.descr.RelationalExprDescr;
@@ -54,7 +72,7 @@ public class ConstraintUtil {
             relDescr.setLeft(relDescr.getRight());
             relDescr.setRight(left);
 
-            String inversedOperator = IndexUtil.ConstraintType.decode(operator).inverse().getOperator();
+            String inversedOperator = ConstraintTypeOperator.decode(operator).inverse().getOperator();
 
             operatorDescr.setOperator(inversedOperator);
 
@@ -84,7 +102,7 @@ public class ConstraintUtil {
         if (leftProp.isEmpty() || rightProp.isEmpty()) {
             return false;
         }
-        return IndexUtil.ConstraintType.decode(operator).canInverse();
+        return ConstraintTypeOperator.decode(operator).canInverse();
     }
 
     private static String getFirstProp(String str) {

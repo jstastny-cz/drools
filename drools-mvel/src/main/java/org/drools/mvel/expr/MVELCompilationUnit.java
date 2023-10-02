@@ -1,17 +1,21 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel.expr;
 
 import java.io.Externalizable;
@@ -27,17 +31,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.drools.base.base.ValueResolver;
 import org.drools.compiler.rule.builder.EvaluatorWrapper;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
+import org.drools.base.reteoo.BaseTuple;
 import org.drools.core.reteoo.LeftTuple;
 import org.drools.core.reteoo.RuleTerminalNodeLeftTuple;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.GlobalResolver;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.GlobalResolver;
 import org.drools.core.rule.consequence.KnowledgeHelper;
-import org.drools.core.reteoo.Tuple;
 import org.drools.mvel.MVELDialectRuntimeData;
 import org.kie.api.definition.rule.Rule;
+import org.kie.api.runtime.rule.FactHandle;
 import org.mvel2.DataConversion;
 import org.mvel2.MVEL;
 import org.mvel2.ParserConfiguration;
@@ -296,45 +300,45 @@ public class MVELCompilationUnit
     public VariableResolverFactory getFactory(final Object knowledgeHelper,
                                               final Declaration[] prevDecl,
                                               final Rule rule,
-                                              final Tuple tuples,
+                                              final BaseTuple tuples,
                                               final Object[] otherVars,
-                                              final ReteEvaluator reteEvaluator,
+                                              final ValueResolver valueResolver,
                                               final GlobalResolver globals) {
         VariableResolverFactory factory = createFactory();
-        updateFactory(knowledgeHelper, prevDecl, rule, null, knowledgeHelper, tuples, otherVars, reteEvaluator, globals, factory );
+        updateFactory(knowledgeHelper, prevDecl, rule, null, knowledgeHelper, tuples, otherVars, valueResolver, globals, factory );
         return factory;
     }
 
     public VariableResolverFactory getFactory(final Object knowledgeHelper,
                                               final Declaration[] prevDecl,
                                               final Rule rule,
-                                              final InternalFactHandle rightHandle,
-                                              final Tuple tuple,
+                                              final FactHandle rightHandle,
+                                              final BaseTuple tuple,
                                               final Object[] otherVars,
-                                              final ReteEvaluator reteEvaluator,
+                                              final ValueResolver valueResolver,
                                               final GlobalResolver globals) {
         VariableResolverFactory factory = createFactory();
-        updateFactory(knowledgeHelper, prevDecl, rule, rightHandle, rightHandle != null ? rightHandle.getObject() : null, tuple, otherVars, reteEvaluator, globals, factory);
+        updateFactory(knowledgeHelper, prevDecl, rule, rightHandle, rightHandle != null ? rightHandle.getObject() : null, tuple, otherVars, valueResolver, globals, factory);
         return factory;
     }
     
-    public void updateFactory( InternalFactHandle rightHandle,
-                               Tuple tuple,
+    public void updateFactory( FactHandle rightHandle,
+                               BaseTuple tuple,
                                Object[] localVars,
-                               ReteEvaluator reteEvaluator,
+                               ValueResolver valueResolver,
                                GlobalResolver globalResolver,
                                VariableResolverFactory factory ) {
-        updateFactory( null, null, null, rightHandle, rightHandle != null ? rightHandle.getObject() : null, tuple, localVars, reteEvaluator, globalResolver, factory );
+        updateFactory( null, null, null, rightHandle, rightHandle != null ? rightHandle.getObject() : null, tuple, localVars, valueResolver, globalResolver, factory );
     }    
     
     private void updateFactory( Object knowledgeHelper,
                                 Declaration[] prevDecl,
                                 Rule rule,
-                                InternalFactHandle rightHandle,
+                                FactHandle rightHandle,
                                 Object rightObject,
-                                Tuple tuple,
+                                BaseTuple tuple,
                                 Object[] otherVars,
-                                ReteEvaluator reteEvaluator,
+                                ValueResolver valueResolver,
                                 GlobalResolver globals,
                                 VariableResolverFactory factory ) {
         int varLength = inputIdentifiers.length;
@@ -352,14 +356,14 @@ public class MVELCompilationUnit
         if ( globalIdentifiers != null ) {
             for (String globalIdentifier : globalIdentifiers) {
                 if (WM_ARGUMENT.equals( globalIdentifier )) {
-                    factory.getIndexedVariableResolver( i++ ).setValue( reteEvaluator );
+                    factory.getIndexedVariableResolver( i++ ).setValue( valueResolver );
                 } else {
                     factory.getIndexedVariableResolver( i++ ).setValue( globals.resolveGlobal( globalIdentifier ) );
                 }
             }
         }
 
-        InternalFactHandle[] handles = tuple instanceof LeftTuple ? tuple.toFactHandles() : null;
+        FactHandle[] handles = tuple instanceof LeftTuple ? tuple.toFactHandles() : null;
         if ( operators.length > 0 ) {
             for (EvaluatorWrapper operator : operators) {
                 // TODO: need to have one operator per working memory
@@ -383,7 +387,7 @@ public class MVELCompilationUnit
                 }
 
                 for (Declaration decl : prevDecl) {
-                    Object o = decl.getValue(reteEvaluator, objs != null ? objs[decl.getObjectIndex()] :
+                    Object o = decl.getValue(valueResolver, objs != null ? objs[decl.getObjectIndex()] :
                                                                             handles[decl.getObjectIndex()].getObject());
                     factory.getIndexedVariableResolver(i++).setValue(o);
                 }
@@ -394,11 +398,11 @@ public class MVELCompilationUnit
             for ( Declaration decl : this.localDeclarations ) {
                 Object value;
                 if( readLocalsFromTuple && tuple != null ) {
-                    value = decl.getValue( reteEvaluator,
+                    value = decl.getValue( valueResolver,
                                            objs != null ? objs[decl.getObjectIndex()] :
                                                           handles[decl.getObjectIndex()].getObject());
                 } else {
-                    value = decl.getValue( reteEvaluator,
+                    value = decl.getValue( valueResolver,
                                           rightObject ); 
                 }
                 factory.getIndexedVariableResolver( i++ ).setValue( value );

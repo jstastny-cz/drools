@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.template.model;
 
 import org.junit.Test;
@@ -28,8 +30,8 @@ public class RuleRenderTest {
     @Test
     public void testRuleRender() {
         final Rule rule = new Rule("myrule",
-                                   new Integer(42),
-                                   1);
+                42,
+                1);
         rule.setComment("rule comments");
 
         final Condition cond = new Condition();
@@ -63,8 +65,8 @@ public class RuleRenderTest {
     @Test
     public void testAttributes() throws Exception {
         Rule rule = new Rule("la",
-                             new Integer(42),
-                             2);
+                42,
+                2);
 
         rule.setActivationGroup("foo");
         rule.setNoLoop(true);
@@ -84,7 +86,7 @@ public class RuleRenderTest {
 
     @Test
     public void testMetadata() throws Exception {
-        Rule rule = new Rule("la", new Integer(42), 2);
+        Rule rule = new Rule("la", 42, 2);
 
         rule.addMetadata("Author( A. U. Thor )");
         rule.addMetadata("Revision( 42 )");
@@ -117,8 +119,8 @@ public class RuleRenderTest {
     @Test
     public void testNilSalience() {
         Rule rule = new Rule("MyRule",
-                             null,
-                             1);
+                null,
+                1);
 
         DRLOutput out = new DRLOutput();
         rule.renderDRL(out);
@@ -127,8 +129,8 @@ public class RuleRenderTest {
         assertThat(idx).isEqualTo(-1);
 
         rule = new Rule("MyRule",
-                        new Integer(42),
-                        1);
+                42,
+                1);
         out = new DRLOutput();
         rule.renderDRL(out);
         xml = out.toString();

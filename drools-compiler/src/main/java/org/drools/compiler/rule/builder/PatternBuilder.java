@@ -1,19 +1,21 @@
-/*
- * Copyright 2006 Red Hat, Inc. and/or its affiliates.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.rule.builder;
 
 import java.lang.reflect.Field;
@@ -43,41 +45,41 @@ import org.drools.compiler.lang.DumperContext;
 import org.drools.compiler.rule.builder.EvaluatorDefinition.Target;
 import org.drools.compiler.rule.builder.XpathAnalysis.XpathPart;
 import org.drools.compiler.rule.builder.util.ConstraintUtil;
-import org.drools.core.base.AcceptsClassObjectType;
-import org.drools.core.base.ClassObjectType;
+import org.drools.base.base.AcceptsClassObjectType;
+import org.drools.base.base.ClassObjectType;
 import org.drools.core.base.FieldNameSupplier;
-import org.drools.core.base.ObjectType;
-import org.drools.core.base.ValueType;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.QueryImpl;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.factmodel.AnnotationDefinition;
-import org.drools.core.factmodel.ClassDefinition;
-import org.drools.core.factmodel.FieldDefinition;
-import org.drools.core.facttemplates.FactTemplate;
-import org.drools.core.facttemplates.FactTemplateFieldExtractor;
-import org.drools.core.facttemplates.FactTemplateObjectType;
-import org.drools.core.reteoo.RuleTerminalNode.SortDeclarations;
-import org.drools.core.rule.Behavior;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.PatternSource;
-import org.drools.core.rule.PredicateConstraint;
-import org.drools.core.rule.RuleConditionElement;
+import org.drools.base.base.ObjectType;
+import org.drools.base.base.ValueType;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.QueryImpl;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.factmodel.AnnotationDefinition;
+import org.drools.base.factmodel.ClassDefinition;
+import org.drools.base.factmodel.FieldDefinition;
+import org.drools.base.facttemplates.FactTemplate;
+import org.drools.base.facttemplates.FactTemplateFieldExtractor;
+import org.drools.base.facttemplates.FactTemplateObjectType;
+import org.drools.base.reteoo.SortDeclarations;
+import org.drools.core.rule.BehaviorRuntime;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.PatternSource;
+import org.drools.base.rule.PredicateConstraint;
+import org.drools.base.rule.RuleConditionElement;
 import org.drools.core.rule.SlidingLengthWindow;
 import org.drools.core.rule.SlidingTimeWindow;
-import org.drools.core.rule.TypeDeclaration;
-import org.drools.core.rule.XpathBackReference;
-import org.drools.core.rule.accessor.AcceptsReadAccessor;
-import org.drools.core.rule.accessor.DeclarationScopeResolver;
-import org.drools.core.rule.accessor.Evaluator;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
-import org.drools.core.rule.constraint.Constraint;
-import org.drools.core.rule.constraint.NegConstraint;
-import org.drools.core.rule.constraint.XpathConstraint;
-import org.drools.core.time.TimeUtils;
-import org.drools.core.util.index.IndexUtil;
+import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.rule.XpathBackReference;
+import org.drools.base.rule.accessor.AcceptsReadAccessor;
+import org.drools.base.rule.accessor.DeclarationScopeResolver;
+import org.drools.base.rule.accessor.Evaluator;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.rule.constraint.Constraint;
+import org.drools.base.rule.constraint.NegConstraint;
+import org.drools.base.rule.constraint.XpathConstraint;
+import org.drools.base.time.TimeUtils;
+import org.drools.base.util.index.ConstraintTypeOperator;
 import org.drools.drl.ast.descr.AnnotationDescr;
 import org.drools.drl.ast.descr.AtomicExprDescr;
 import org.drools.drl.ast.descr.BaseDescr;
@@ -376,7 +378,7 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
     private void processBehaviors(RuleBuildContext context, PatternDescr patternDescr, Pattern pattern) {
         for (BehaviorDescr behaviorDescr : patternDescr.getBehaviors()) {
             if (pattern.getObjectType().isEvent()) {
-                Behavior window = createWindow(behaviorDescr);
+                BehaviorRuntime window = createWindow(behaviorDescr);
                 if (window != null) {
                     pattern.addBehavior(window);
                     context.setNeedStreamMode();
@@ -393,11 +395,11 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
         }
     }
 
-    private Behavior createWindow(BehaviorDescr behaviorDescr) {
-        if (Behavior.BehaviorType.TIME_WINDOW.matches(behaviorDescr.getSubType())) {
+    private BehaviorRuntime createWindow(BehaviorDescr behaviorDescr) {
+        if (BehaviorRuntime.BehaviorType.TIME_WINDOW.matches(behaviorDescr.getSubType())) {
             return new SlidingTimeWindow(TimeUtils.parseTimeString(behaviorDescr.getParameters().get(0)));
         }
-        if (Behavior.BehaviorType.LENGTH_WINDOW.matches(behaviorDescr.getSubType())) {
+        if (BehaviorRuntime.BehaviorType.LENGTH_WINDOW.matches(behaviorDescr.getSubType())) {
             return new SlidingLengthWindow(Integer.parseInt(behaviorDescr.getParameters().get(0)));
         }
         return null;
@@ -997,7 +999,7 @@ public class PatternBuilder implements RuleConditionBuilder<PatternDescr> {
     }
 
     private String normalizeNegatedExpr(String expr, String operator) {
-        IndexUtil.ConstraintType constraintType = IndexUtil.ConstraintType.decode(operator);
+        ConstraintTypeOperator constraintType = ConstraintTypeOperator.decode(operator);
         return constraintType.getOperator() != null ?
                 expr.replace( constraintType.getOperator(), constraintType.negate().getOperator() ) :
                 "!(" + expr + ")";

@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler;
 
 import java.util.ArrayList;
@@ -51,24 +53,24 @@ public class KieBaseBuilder {
     }
 
     public InternalKnowledgeBase createKieBase(CanonicalKiePackages kpkgs) {
-        InternalKnowledgeBase kBase = KnowledgeBaseFactory.newKnowledgeBase( kBaseName, conf );
+        InternalKnowledgeBase kBase = KnowledgeBaseFactory.newKnowledgeBase(kBaseName, conf);
         kBase.addPackages( kpkgs.getKiePackages() );
         return kBase;
     }
 
-    public static InternalKnowledgeBase createKieBaseFromModel( Model model, KieBaseOption... options ) {
+    public static InternalKnowledgeBase createKieBaseFromModel(Model model, KieBaseOption... options) {
         return createKieBaseFromModel( Collections.singleton( model ), options );
     }
 
-    public static InternalKnowledgeBase createKieBaseFromModel( Model model, KieBaseConfiguration kieBaseConf ) {
+    public static InternalKnowledgeBase createKieBaseFromModel(Model model, KieBaseConfiguration kieBaseConf) {
         return createKieBaseFromModel( Collections.singleton( model ), kieBaseConf );
     }
 
-    public static InternalKnowledgeBase createKieBaseFromModel( Model model, KieBaseConfiguration kieBaseConf, KnowledgeBuilderConfiguration knowledgeBuilderConf) {
+    public static InternalKnowledgeBase createKieBaseFromModel(Model model, KieBaseConfiguration kieBaseConf, KnowledgeBuilderConfiguration knowledgeBuilderConf) {
         return createKieBaseFromModel( Collections.singleton( model ), kieBaseConf, knowledgeBuilderConf );
     }
 
-    public static InternalKnowledgeBase createKieBaseFromModel( Collection<Model> models, KieBaseOption... options ) {
+    public static InternalKnowledgeBase createKieBaseFromModel(Collection<Model> models, KieBaseOption... options) {
         KieBaseConfiguration kieBaseConf = KieServices.get().newKieBaseConfiguration();
         if (options != null) {
             for (KieBaseOption option : options) {
@@ -78,19 +80,19 @@ public class KieBaseBuilder {
         return createKieBaseFromModel( models, kieBaseConf );
     }
 
-    public static InternalKnowledgeBase createKieBaseFromModel( Collection<Model> models, KieBaseConfiguration kieBaseConf ) {
+    public static InternalKnowledgeBase createKieBaseFromModel(Collection<Model> models, KieBaseConfiguration kieBaseConf) {
         KiePackagesBuilder builder = new KiePackagesBuilder(kieBaseConf);
         models.forEach( builder::addModel );
         return new KieBaseBuilder(kieBaseConf).createKieBase(builder.build());
     }
 
-    public static InternalKnowledgeBase createKieBaseFromModel( Collection<Model> models, KieBaseConfiguration kieBaseConf, KnowledgeBuilderConfiguration knowledgeBuilderConf ) {
+    public static InternalKnowledgeBase createKieBaseFromModel(Collection<Model> models, KieBaseConfiguration kieBaseConf, KnowledgeBuilderConfiguration knowledgeBuilderConf) {
         KiePackagesBuilder builder = new KiePackagesBuilder(kieBaseConf, knowledgeBuilderConf, new ArrayList<>());
         models.forEach( builder::addModel );
         return new KieBaseBuilder(kieBaseConf).createKieBase(builder.build());
     }
 
-    public static InternalKnowledgeBase createKieBaseFromModel( Collection<Model> models, KieBaseModel kieBaseModel ) {
+    public static InternalKnowledgeBase createKieBaseFromModel(Collection<Model> models, KieBaseModel kieBaseModel) {
         KieBaseConfiguration conf = KieServices.get().newKieBaseConfiguration();
         RuleBaseConfiguration kieBaseConf = conf.as(RuleBaseConfiguration.KEY);
         kieBaseConf.setEventProcessingMode(kieBaseModel.getEventProcessingMode());

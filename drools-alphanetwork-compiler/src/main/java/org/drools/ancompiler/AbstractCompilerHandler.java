@@ -1,32 +1,35 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.ancompiler;
 
 import java.util.NoSuchElementException;
 
+import org.drools.base.common.NetworkNode;
 import org.drools.core.reteoo.AlphaNode;
 import org.drools.core.reteoo.Sink;
-import org.drools.core.rule.ContextEntry;
+import org.drools.base.rule.ContextEntry;
 import org.drools.core.util.index.AlphaRangeIndex;
 
 /**
  * This handler is used as a base class for all {@link org.drools.ancompiler.NetworkHandler}s used for
  * generating a compiled network. It provides methods to return the variable type and names used for storing
- * refernces to different {@link org.drools.core.common.NetworkNode}s and variable names for ClassFieldReaders.
+ * refernces to different {@link NetworkNode}s and variable names for ClassFieldReaders.
  */
 abstract class AbstractCompilerHandler extends NetworkHandlerAdaptor {
     protected static final String NEWLINE = "\n";
@@ -80,7 +83,7 @@ abstract class AbstractCompilerHandler extends NetworkHandlerAdaptor {
      * nodeId.
      *
      * @param clazz  class whose simple name is lowercased and user as the prefix of the variable name
-     * @param nodeId id of {@link org.drools.core.common.NetworkNode}
+     * @param nodeId id of {@link NetworkNode}
      * @return variable name
      * @see Class#getSimpleName()
      */

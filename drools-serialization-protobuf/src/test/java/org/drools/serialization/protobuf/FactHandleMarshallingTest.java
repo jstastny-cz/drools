@@ -1,35 +1,31 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.serialization.protobuf;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.Date;
-
+import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.rule.EntryPointId;
 import org.drools.core.SessionConfiguration;
 import org.drools.core.WorkingMemoryEntryPoint;
+import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.DefaultFactHandle;
-import org.drools.core.common.EventFactHandle;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.QueryElementFactHandle;
-import org.drools.core.common.RuleBasePartitionId;
 import org.drools.core.impl.EnvironmentFactory;
 import org.drools.core.impl.RuleBaseFactory;
 import org.drools.core.marshalling.MarshallerReaderContext;
@@ -38,7 +34,6 @@ import org.drools.core.reteoo.EntryPointNode;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.reteoo.Rete;
 import org.drools.core.reteoo.builder.NodeFactory;
-import org.drools.core.rule.EntryPointId;
 import org.drools.kiesession.entrypoints.NamedEntryPoint;
 import org.drools.kiesession.rulebase.InternalKnowledgeBase;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
@@ -55,6 +50,14 @@ import org.kie.api.runtime.conf.ClockTypeOption;
 import org.kie.api.runtime.rule.EntryPoint;
 import org.kie.api.runtime.rule.RuleRuntime;
 import org.kie.internal.marshalling.MarshallerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -74,10 +77,10 @@ public class FactHandleMarshallingTest {
         NodeFactory nFacotry = CoreComponentFactory.get().getNodeFactoryService();
 
         RuleBasePartitionId partionId = RuleBasePartitionId.MAIN_PARTITION;
-        EntryPointNode entryPointNode = nFacotry.buildEntryPointNode(1, partionId, false, rete , EntryPointId.DEFAULT);
+        EntryPointNode entryPointNode = nFacotry.buildEntryPointNode(1, partionId, rete , EntryPointId.DEFAULT);
         WorkingMemoryEntryPoint wmEntryPoint = new NamedEntryPoint( EntryPointId.DEFAULT, entryPointNode, wm);
 
-        EventFactHandle factHandle = new EventFactHandle(1, new Person(),0, (new Date()).getTime(), 0, wmEntryPoint);
+        DefaultEventHandle factHandle = new DefaultEventHandle(1, new Person(), 0, (new Date()).getTime(), 0, wmEntryPoint);
         
         return factHandle;
     }
@@ -144,12 +147,10 @@ public class FactHandleMarshallingTest {
         long startTimeStamp = 0;
         long duration = 0;
         boolean expired = false;
-        long activationsCount = 0;
         if (type == 2) {
             startTimeStamp = context.readLong();
             duration = context.readLong();
             expired = context.readBoolean();
-            activationsCount = context.readLong();
         }
 
         int strategyIndex = context.readInt();
@@ -210,10 +211,9 @@ public class FactHandleMarshallingTest {
                 break;
             }
             case 2: {
-                handle = new EventFactHandle( id, object, recency, startTimeStamp, duration,
-                        (WorkingMemoryEntryPoint) entryPoint );
-                ( (EventFactHandle) handle ).setExpired( expired );
-                ( (EventFactHandle) handle ).setActivationsCount( activationsCount );
+                handle = new DefaultEventHandle(id, object, recency, startTimeStamp, duration,
+                                                (WorkingMemoryEntryPoint) entryPoint );
+                ( (DefaultEventHandle) handle ).setExpired(expired);
                 break;
             }
             default: {

@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.compiler.rule.builder.dialect.mvel;
 
 import java.io.InputStreamReader;
@@ -23,6 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import org.drools.base.base.ValueResolver;
 import org.drools.compiler.builder.impl.KnowledgeBuilderConfigurationImpl;
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
 import org.drools.compiler.compiler.Dialect;
@@ -34,14 +38,14 @@ import org.drools.compiler.compiler.PackageRegistry;
 import org.drools.compiler.rule.builder.RuleBuildContext;
 import org.drools.compiler.rule.builder.RuleBuilder;
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.base.ClassObjectType;
+import org.drools.base.base.ClassObjectType;
 import org.drools.core.common.EmptyBetaConstraints;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.Memory;
 import org.drools.core.common.PropagationContextFactory;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.reteoo.BetaNode;
 import org.drools.core.reteoo.CoreComponentFactory;
 import org.drools.core.reteoo.LeftTuple;
@@ -57,12 +61,12 @@ import org.drools.core.reteoo.RuleTerminalNode;
 import org.drools.core.reteoo.RuntimeComponentFactory;
 import org.drools.core.reteoo.Sink;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.GroupElement;
-import org.drools.core.rule.ImportDeclaration;
-import org.drools.core.rule.Pattern;
-import org.drools.core.base.ObjectType;
-import org.drools.core.rule.accessor.PatternExtractor;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.ImportDeclaration;
+import org.drools.base.rule.Pattern;
+import org.drools.base.base.ObjectType;
+import org.drools.base.rule.accessor.PatternExtractor;
 import org.drools.core.common.PropagationContext;
 import org.drools.drl.ast.descr.AttributeDescr;
 import org.drools.drl.ast.descr.PackageDescr;
@@ -481,7 +485,7 @@ public class MVELConsequenceBuilderTest {
 
         public void assertObject(final InternalFactHandle factHandle,
                                  final PropagationContext pctx,
-                                 final ReteEvaluator reteEvaluator) {
+                                 final ValueResolver valueResolver) {
         }
 
         @Override
@@ -502,8 +506,8 @@ public class MVELConsequenceBuilderTest {
                                      ReteEvaluator reteEvaluator) {
         }
 
-        public LeftTuple createLeftTuple( InternalFactHandle factHandle,
-                                          boolean leftTupleMemoryEnabled) {
+        public LeftTuple createLeftTuple(InternalFactHandle factHandle,
+                                         boolean leftTupleMemoryEnabled) {
             return new JoinNodeLeftTuple(factHandle, this, leftTupleMemoryEnabled );
         }    
         

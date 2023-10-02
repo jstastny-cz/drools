@@ -1,41 +1,34 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.serialization.protobuf;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import com.google.protobuf.ByteString;
-import org.drools.core.InitialFact;
+import org.drools.base.InitialFact;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.time.Trigger;
 import org.drools.core.WorkingMemoryEntryPoint;
 import org.drools.core.common.AgendaGroupQueueImpl;
 import org.drools.core.common.BaseNode;
+import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.DefaultFactHandle;
 import org.drools.core.common.EqualityKey;
-import org.drools.core.common.EventFactHandle;
 import org.drools.core.common.InternalAgenda;
 import org.drools.core.common.InternalAgendaGroup;
 import org.drools.core.common.InternalFactHandle;
@@ -45,28 +38,24 @@ import org.drools.core.common.NodeMemories;
 import org.drools.core.common.ObjectStore;
 import org.drools.core.common.ObjectTypeConfigurationRegistry;
 import org.drools.core.common.QueryElementFactHandle;
+import org.drools.core.common.RuleFlowGroup;
 import org.drools.core.common.TruthMaintenanceSystem;
 import org.drools.core.common.TruthMaintenanceSystemFactory;
-import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.marshalling.MarshallerWriteContext;
 import org.drools.core.phreak.PropagationEntry;
 import org.drools.core.phreak.RuleAgendaItem;
 import org.drools.core.process.WorkItem;
-import org.drools.core.reteoo.BaseTuple;
+import org.drools.core.reteoo.AbstractTuple;
 import org.drools.core.reteoo.LeftTuple;
-import org.drools.core.reteoo.NodeTypeEnums;
 import org.drools.core.reteoo.ObjectTypeConf;
 import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.reteoo.ObjectTypeNode.ObjectTypeNodeMemory;
 import org.drools.core.reteoo.QueryElementNode.QueryElementNodeMemory;
 import org.drools.core.reteoo.RightTuple;
 import org.drools.core.reteoo.Sink;
 import org.drools.core.reteoo.TerminalNode;
 import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.common.RuleFlowGroup;
 import org.drools.core.time.JobContext;
 import org.drools.core.time.SelfRemovalJobContext;
-import org.drools.core.time.Trigger;
 import org.drools.core.time.impl.CompositeMaxDurationTrigger;
 import org.drools.core.time.impl.CronTrigger;
 import org.drools.core.time.impl.IntervalTrigger;
@@ -74,13 +63,12 @@ import org.drools.core.time.impl.PointInTimeTrigger;
 import org.drools.core.time.impl.PseudoClockScheduler;
 import org.drools.core.time.impl.TimerJobInstance;
 import org.drools.core.util.FastIterator;
+import org.drools.core.util.LinkedList;
 import org.drools.core.util.LinkedListEntry;
 import org.drools.kiesession.entrypoints.NamedEntryPoint;
 import org.drools.kiesession.session.StatefulKnowledgeSessionImpl;
 import org.drools.serialization.protobuf.ProtobufMessages.FactHandle;
 import org.drools.serialization.protobuf.ProtobufMessages.ObjectTypeConfiguration;
-import org.drools.serialization.protobuf.ProtobufMessages.ProcessData.Builder;
-import org.drools.serialization.protobuf.ProtobufMessages.Timers;
 import org.drools.serialization.protobuf.ProtobufMessages.Timers.Timer;
 import org.drools.serialization.protobuf.ProtobufMessages.Tuple;
 import org.drools.serialization.protobuf.iterators.ActivationIterator;
@@ -95,6 +83,18 @@ import org.drools.tms.beliefsystem.ModedAssertion;
 import org.kie.api.marshalling.ObjectMarshallingStrategy;
 import org.kie.api.marshalling.ObjectMarshallingStrategyStore;
 import org.kie.api.runtime.rule.EntryPoint;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An output marshaller that uses ProtoBuf as the marshalling framework
@@ -114,14 +114,8 @@ public class ProtobufOutputMarshaller {
     }
 
     public static void writeSession( ProtobufMarshallerWriteContext context) throws IOException {
-
         ProtobufMessages.KnowledgeSession _session = serializeSession( context );
-        
-//        System.out.println("=============================================================================");
-//        System.out.println(_session);
-
-        PersisterHelper.writeToStreamWithHeader( context,
-                                                 _session );
+        PersisterHelper.writeToStreamWithHeader( context, _session );
     }
 
     private static ProtobufMessages.KnowledgeSession serializeSession( MarshallerWriteContext context) throws IOException {
@@ -165,9 +159,7 @@ public class ProtobufOutputMarshaller {
                 ProtobufMessages.EntryPoint.Builder _epb = ProtobufMessages.EntryPoint.newBuilder();
                 _epb.setEntryPointId( wmep.getEntryPointId() );
 
-                writeObjectTypeConfiguration( context,
-                                              ((WorkingMemoryEntryPoint)wmep).getObjectTypeConfigurationRegistry(),
-                                              _epb );
+                writeObjectTypeConfiguration( ((WorkingMemoryEntryPoint)wmep).getObjectTypeConfigurationRegistry(), _epb );
 
                 writeFactHandles( context,
                                   _epb,
@@ -189,7 +181,7 @@ public class ProtobufOutputMarshaller {
                     .setRuleData( _ruleData.build() );
 
             if ( processMarshaller != null ) {
-                Builder _pdata = ProtobufMessages.ProcessData.newBuilder();
+                ProtobufMessages.ProcessData.Builder _pdata = ProtobufMessages.ProcessData.newBuilder();
                 if ( context.isMarshalProcessInstances() ) {
                     context.setParameterObject( _pdata );
                     processMarshaller.writeProcessInstances( context );
@@ -207,7 +199,7 @@ public class ProtobufOutputMarshaller {
                 _session.setProcessData( _pdata.build() );
             }
 
-            Timers _timers = writeTimers( context.getWorkingMemory().getTimerJobInstances( context.getWorkingMemory().getIdentifier() ),
+            ProtobufMessages.Timers _timers = writeTimers( context.getWorkingMemory().getTimerJobInstances( context.getWorkingMemory().getIdentifier() ),
                                           context );
             if ( _timers != null ) {
                 _session.setTimers( _timers );
@@ -224,30 +216,20 @@ public class ProtobufOutputMarshaller {
         }
     }
 
-    private static void writeObjectTypeConfiguration( MarshallerWriteContext context,
-    		                                          ObjectTypeConfigurationRegistry otcr,
+    private static void writeObjectTypeConfiguration( ObjectTypeConfigurationRegistry otcr,
     		                                          ProtobufMessages.EntryPoint.Builder _epb) {
         
         Collection<ObjectTypeConf> values = otcr.values();
     	ObjectTypeConf[] otcs = values.toArray( new ObjectTypeConf[ values.size() ] );
-    	Arrays.sort( otcs,
-    	        new Comparator<ObjectTypeConf>() {
-                    @Override
-                    public int compare(ObjectTypeConf o1, ObjectTypeConf o2) {
-                        return o1.getTypeName().compareTo(o2.getTypeName());
-                    }
-    	});
+    	Arrays.sort( otcs, Comparator.comparing(ObjectTypeConf::getTypeName));
         for( ObjectTypeConf otc : otcs ) {
             ObjectTypeNode objectTypeNode = otc.getConcreteObjectTypeNode();
             if (objectTypeNode != null) {
-                final ObjectTypeNodeMemory memory = context.getWorkingMemory().getNodeMemory(objectTypeNode);
-                if (memory != null) {
-                    ObjectTypeConfiguration _otc = ObjectTypeConfiguration.newBuilder()
-                                                                          .setType(otc.getTypeName())
-                                                                          .setTmsEnabled(otc.isTMSEnabled())
-                                                                          .build();
-                    _epb.addOtc(_otc);
-                }
+                ObjectTypeConfiguration _otc = ObjectTypeConfiguration.newBuilder()
+                                                                      .setType(otc.getTypeName())
+                                                                      .setTmsEnabled(otc.isTMSEnabled())
+                                                                      .build();
+                _epb.addOtc(_otc);
             }
     	}
 	}
@@ -259,7 +241,7 @@ public class ProtobufOutputMarshaller {
             // this must clone as re-evaluation will under underlying Collection
             for ( RuleAgendaItem activation : new ArrayList<>(wm.getAgenda().getAgendaGroupsManager().getActivations())) {
                 // evaluate it
-                activation.getRuleExecutor().reEvaluateNetwork( wm );
+                activation.getRuleExecutor().evaluateNetworkIfDirty( wm );
                 activation.getRuleExecutor().removeRuleAgendaItemWhenEmpty( wm );
             }
             dirty = false;
@@ -376,7 +358,7 @@ public class ProtobufOutputMarshaller {
     private static ProtobufMessages.NodeMemory writeQueryElementNodeMemory(final int nodeId,
                                                                            final Memory memory,
                                                                            final InternalWorkingMemory wm) {
-        org.drools.core.util.Iterator<LeftTuple> it = LeftTupleIterator.iterator( wm, ((QueryElementNodeMemory) memory).getNode() );
+        org.drools.core.util.Iterator<LeftTuple> it = LeftTupleIterator.iterator(wm, ((QueryElementNodeMemory) memory).getNode() );
 
         ProtobufMessages.NodeMemory.QueryElementNodeMemory.Builder _query = ProtobufMessages.NodeMemory.QueryElementNodeMemory.newBuilder();
         for ( LeftTuple leftTuple = it.next(); leftTuple != null; leftTuple = it.next() ) {
@@ -479,7 +461,7 @@ public class ProtobufOutputMarshaller {
 
                 if ( key.size() > 1 ) {
                     // add all the other key's if they exist
-                    FastIterator keyIter = key.fastIterator();
+                    FastIterator keyIter = new LinkedList.TMSLinkedListFastIterator();
                     for ( DefaultFactHandle handle = key.getFirst().getNext(); handle != null; handle = (DefaultFactHandle) keyIter.next( handle ) ) {
                         _key.addOtherHandle( handle.getId() );
                     }
@@ -506,7 +488,7 @@ public class ProtobufOutputMarshaller {
         ObjectMarshallingStrategyStore objectMarshallingStrategyStore = context.getObjectMarshallingStrategyStore();
 
         // for ( LinkedListEntry node = (LinkedListEntry) beliefSet.getFirst(); node != null; node = (LinkedListEntry) node.getNext() ) {
-        FastIterator it =  beliefSet.iterator();
+        FastIterator it =  new LinkedList.TMSLinkedListFastIterator();
         for ( LinkedListEntry node = (LinkedListEntry) beliefSet.getFirst(); node != null; node = (LinkedListEntry) it.next(node) ) {
             LogicalDependency belief = (LogicalDependency) node.getObject();
             ProtobufMessages.LogicalDependency.Builder _logicalDependency = ProtobufMessages.LogicalDependency.newBuilder();
@@ -563,9 +545,7 @@ public class ProtobufOutputMarshaller {
 
         // Write out FactHandles
         for ( InternalFactHandle handle : orderFacts( objectStore ) ) {
-            ProtobufMessages.FactHandle _handle = writeFactHandle( context,
-                                                                   objectMarshallingStrategyStore,
-                                                                   handle );
+            ProtobufMessages.FactHandle _handle = writeFactHandle( context, objectMarshallingStrategyStore, handle );
             _epb.addHandle( _handle );
         }
     }
@@ -581,11 +561,10 @@ public class ProtobufOutputMarshaller {
 
         if ( _handle.getType() == ProtobufMessages.FactHandle.HandleType.EVENT ) {
             // is event
-            EventFactHandle efh = (EventFactHandle) handle;
+            DefaultEventHandle efh = (DefaultEventHandle) handle;
             _handle.setTimestamp( efh.getStartTimestamp() );
             _handle.setDuration( efh.getDuration() );
             _handle.setIsExpired( efh.isExpired() );
-            _handle.setActivationsCount( efh.getActivationsCount() );
             _handle.setOtnCount( efh.getOtnCount() );
         }
 
@@ -612,7 +591,7 @@ public class ProtobufOutputMarshaller {
     }
 
     private static ProtobufMessages.FactHandle.HandleType getHandleType(InternalFactHandle handle) {
-        if ( handle instanceof EventFactHandle ) {
+        if ( handle instanceof DefaultEventHandle) {
             return ProtobufMessages.FactHandle.HandleType.EVENT;
         } else if ( handle instanceof QueryElementFactHandle ) {
             return ProtobufMessages.FactHandle.HandleType.QUERY;
@@ -732,12 +711,12 @@ public class ProtobufOutputMarshaller {
         org.drools.core.reteoo.Tuple tuple = internalMatch.getTuple();
         ProtobufMessages.Tuple.Builder _tb = ProtobufMessages.Tuple.newBuilder();
 
-        boolean serializeObjects = isDormient && hasNodeMemory((BaseTuple) internalMatch);
+        boolean serializeObjects = isDormient && hasNodeMemory((AbstractTuple) internalMatch);
 
         if (tuple != null) {
             // tuple can be null if this is a rule network evaluation activation, instead of terminal node left tuple.
             for (org.drools.core.reteoo.Tuple entry = tuple.skipEmptyHandles(); entry != null; entry = entry.getParent()) {
-                InternalFactHandle handle = entry.getFactHandle();
+                org.kie.api.runtime.rule.FactHandle handle = entry.getFactHandle();
                 _tb.addHandleId(handle.getId());
 
                 if (serializeObjects) {
@@ -755,7 +734,7 @@ public class ProtobufOutputMarshaller {
         return _tb.build();
     }
 
-    private static boolean hasNodeMemory(BaseTuple agendaItem) {
+    private static boolean hasNodeMemory(AbstractTuple agendaItem) {
         Sink tupleSink = agendaItem.getTupleSink();
         if (tupleSink instanceof TerminalNode ) {
             return PersisterHelper.hasNodeMemory( (TerminalNode) tupleSink );

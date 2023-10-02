@@ -1,17 +1,21 @@
-/*
- * Copyright (c) 2022. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel;
 
 import java.io.ByteArrayInputStream;
@@ -27,23 +31,23 @@ import java.util.Set;
 import org.drools.mvel.accessors.ClassFieldAccessor;
 import org.drools.core.base.ClassFieldAccessorCache;
 import org.drools.mvel.accessors.ClassFieldAccessorStore;
-import org.drools.core.common.DroolsObjectInputStream;
-import org.drools.core.common.DroolsObjectOutputStream;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.ResourceTypePackageRegistry;
-import org.drools.core.definitions.impl.KnowledgePackageImpl;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.factmodel.ClassDefinition;
-import org.drools.core.factmodel.FieldDefinition;
-import org.drools.core.rule.DialectRuntimeRegistry;
-import org.drools.core.rule.Function;
-import org.drools.core.rule.ImportDeclaration;
-import org.drools.core.rule.TypeDeclaration;
-import org.drools.core.rule.WindowDeclaration;
-import org.drools.core.base.AcceptsClassObjectType;
-import org.drools.core.rule.accessor.AcceptsReadAccessor;
-import org.drools.core.rule.accessor.ReadAccessor;
-import org.drools.core.base.ObjectType;
+import org.drools.base.common.DroolsObjectInputStream;
+import org.drools.base.common.DroolsObjectOutputStream;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.ResourceTypePackageRegistry;
+import org.drools.base.definitions.impl.KnowledgePackageImpl;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.factmodel.ClassDefinition;
+import org.drools.base.factmodel.FieldDefinition;
+import org.drools.base.rule.DialectRuntimeRegistry;
+import org.drools.base.rule.Function;
+import org.drools.base.rule.ImportDeclaration;
+import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.rule.WindowDeclaration;
+import org.drools.base.base.AcceptsClassObjectType;
+import org.drools.base.rule.accessor.AcceptsReadAccessor;
+import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.base.ObjectType;
 import org.drools.util.ClassUtils;
 import org.kie.api.runtime.rule.AccumulateFunction;
 import org.kie.internal.builder.KnowledgeBuilderResult;
@@ -65,8 +69,8 @@ public class MVELKnowledgePackageImpl extends KnowledgePackageImpl {
         return classFieldAccessorStore;
     }
 
-    public void setClassFieldAccessorCache(ClassFieldAccessorCache classFieldAccessorCache) {
-        this.classFieldAccessorStore.setClassFieldAccessorCache(classFieldAccessorCache);
+    public void setClassFieldAccessorCache(Object classFieldAccessorCache) {
+        this.classFieldAccessorStore.setClassFieldAccessorCache( (ClassFieldAccessorCache) classFieldAccessorCache);
     }
 
     @Override

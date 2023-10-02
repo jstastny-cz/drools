@@ -1,53 +1,57 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.drools.core.base.CoreComponentsBuilder;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.base.CoreComponentsBuilder;
 import org.drools.compiler.rule.builder.EvaluatorWrapper;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.rule.Declaration;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.rule.Declaration;
 import org.drools.core.reteoo.Tuple;
+import org.kie.api.runtime.rule.FactHandle;
 
 public class EvaluatorHelper {
 
     private EvaluatorHelper() { }
 
-    public static Map<String, Object> valuesAsMap(Object object, ReteEvaluator reteEvaluator, Tuple tuple, Declaration[] declarations) {
+    public static Map<String, Object> valuesAsMap(Object object, ValueResolver valueResolver, BaseTuple tuple, Declaration[] declarations) {
         if (declarations.length == 0) {
             return null;
         }
         Map<String, Object> map = new HashMap<>();
         for (Declaration declaration : declarations) {
             if (tuple == null) {
-                map.put(declaration.getBindingName(), declaration.getExtractor().getValue(reteEvaluator, object));
+                map.put(declaration.getBindingName(), declaration.getExtractor().getValue(valueResolver, object));
             } else {
                 Object fact = tuple.getObject(declaration);
-                map.put(declaration.getBindingName(), declaration.getExtractor().getValue(reteEvaluator, fact != null ? fact : object));
+                map.put(declaration.getBindingName(), declaration.getExtractor().getValue(valueResolver, fact != null ? fact : object));
             }
         }
         return map;
     }
 
-    public static void initOperators(InternalFactHandle handle, Tuple tuple, EvaluatorWrapper[] operators) {
-        InternalFactHandle[] handles = tuple != null ? tuple.toFactHandles() : new InternalFactHandle[0];
+    public static void initOperators(FactHandle handle, Tuple tuple, EvaluatorWrapper[] operators) {
+        FactHandle[] handles = tuple != null ? tuple.toFactHandles() : new FactHandle[0];
         for (EvaluatorWrapper operator : operators) {
             operator.loadHandles(handles, handle);
         }

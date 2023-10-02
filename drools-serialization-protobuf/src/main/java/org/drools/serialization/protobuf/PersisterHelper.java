@@ -1,19 +1,21 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.serialization.protobuf;
 
 import java.io.ByteArrayOutputStream;
@@ -33,11 +35,11 @@ import com.google.protobuf.ByteString.Output;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.Message;
 import org.drools.tms.beliefsystem.simple.BeliefSystemLogicalCallback;
-import org.drools.core.common.DroolsObjectInputStream;
-import org.drools.core.common.DroolsObjectOutputStream;
+import org.drools.base.common.DroolsObjectInputStream;
+import org.drools.base.common.DroolsObjectOutputStream;
 import org.drools.core.common.WorkingMemoryAction;
-import org.drools.core.factmodel.traits.TraitFactory;
-import org.drools.core.impl.RuleBase;
+import org.drools.base.factmodel.traits.TraitFactory;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.impl.WorkingMemoryReteExpireAction;
 import org.drools.serialization.protobuf.marshalling.ActivationKey;
 import org.drools.core.marshalling.MarshallerReaderContext;
@@ -48,7 +50,7 @@ import org.drools.core.marshalling.TupleKey;
 import org.drools.core.reteoo.RuntimeComponentFactory;
 import org.drools.core.rule.SlidingTimeWindow.BehaviorExpireWMAction;
 import org.drools.core.reteoo.Tuple;
-import org.drools.core.util.Drools;
+import org.drools.base.util.Drools;
 import org.drools.core.util.KeyStoreHelper;
 import org.drools.wiring.api.classloader.ProjectClassLoader;
 import org.drools.serialization.protobuf.ProtobufMessages.Header;
@@ -158,7 +160,7 @@ public class PersisterHelper extends MarshallingHelper {
         
         writeStrategiesIndex( context, _header );
 
-        RuleBase kBase = context.getKnowledgeBase();
+        InternalRuleBase kBase = context.getKnowledgeBase();
         if (kBase != null) {
             TraitFactory traitFactory = RuntimeComponentFactory.get().getTraitFactory(kBase);
             if (traitFactory != null) {
@@ -205,10 +207,10 @@ public class PersisterHelper extends MarshallingHelper {
 			
             Context ctx = context.getStrategyContext().get( entry.getKey() );
             if( ctx != null ) {
-                Output os = ByteString.newOutput();
-                ctx.write( new DroolsObjectOutputStream( os ) );
-                _strat.setData( os.toByteString() );
-                os.close();
+                try (Output os = ByteString.newOutput()) {
+                    ctx.write( new DroolsObjectOutputStream( os ) );
+                    _strat.setData( os.toByteString() );
+                }
             }
             _header.addStrategy( _strat.build() );
         }

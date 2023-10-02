@@ -1,17 +1,20 @@
-/*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.drools.model;
 
@@ -21,6 +24,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.drools.model.functions.Function1;
@@ -35,6 +39,13 @@ public interface PrototypeExpression {
     Function1<PrototypeFact, Object> asFunction(Prototype prototype);
 
     Collection<String> getImpactedFields();
+    
+    /**
+     * if indexable, return a key for alpha/beta indexing
+     */
+    default Optional<String> getIndexingKey() {
+        return Optional.empty();
+    }
 
     static PrototypeExpression fixedValue(Object value) {
         return new FixedValue(value);
@@ -150,8 +161,9 @@ public interface PrototypeExpression {
             return prototype.getFieldValueExtractor(fieldName)::apply;
         }
 
-        public String getFieldName() {
-            return fieldName;
+        @Override
+        public Optional<String> getIndexingKey() {
+            return Optional.of(fieldName);
         }
 
         @Override
@@ -189,12 +201,12 @@ public interface PrototypeExpression {
 
         @Override
         public Object evaluate(Map<PrototypeVariable, PrototypeFact> factsMap) {
-            return protoVar.getPrototype().getFieldValueExtractor(getFieldName()).apply(factsMap.get(protoVar));
+            return protoVar.getPrototype().getFieldValueExtractor(getIndexingKey().get()).apply(factsMap.get(protoVar));
         }
 
         @Override
         public String toString() {
-            return "PrototypeFieldValue{" + getFieldName() + " on " + protoVar + "}";
+            return "PrototypeFieldValue{" + getIndexingKey() + " on " + protoVar + "}";
         }
     }
 

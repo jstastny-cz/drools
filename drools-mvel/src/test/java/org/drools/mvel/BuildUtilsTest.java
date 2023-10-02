@@ -1,39 +1,41 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel;
 
-import org.drools.core.base.ClassObjectType;
-import org.drools.core.base.ValueType;
-import org.drools.core.base.extractors.SelfReferenceClassFieldReader;
+import org.drools.base.base.ClassObjectType;
+import org.drools.base.base.ValueType;
+import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
 import org.drools.core.reteoo.builder.BuildUtils;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.GroupElement;
-import org.drools.core.rule.GroupElement.Type;
-import org.drools.core.rule.Pattern;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.GroupElement.Type;
+import org.drools.base.rule.Pattern;
 import org.drools.core.test.model.StockTick;
-import org.drools.core.time.Interval;
+import org.drools.base.time.Interval;
 import org.drools.core.time.TemporalDependencyMatrix;
 import org.drools.mvel.evaluators.AfterEvaluatorDefinition;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.drools.core.time.Interval.MAX;
-import static org.drools.core.time.Interval.MIN;
+import static org.drools.base.time.Interval.MAX;
+import static org.drools.base.time.Interval.MIN;
 
 public class BuildUtilsTest {
     
@@ -45,7 +47,7 @@ public class BuildUtilsTest {
     }
 
     /**
-     * Test method for {@link org.drools.core.reteoo.builder.BuildUtils#calculateTemporalDistance(org.drools.core.rule.GroupElement)}.
+     * Test method for {@link org.drools.core.reteoo.builder.BuildUtils#calculateTemporalDistance(GroupElement)}.
      */
     @Test
     public void testCalculateTemporalDistance() {

@@ -1,20 +1,36 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
+
+import org.drools.base.base.ValueType;
+import org.drools.base.common.NetworkNode;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.IndexableConstraint;
+import org.drools.base.rule.accessor.FieldValue;
+import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
+import org.drools.base.util.index.ConstraintTypeOperator;
+import org.drools.core.common.BaseNode;
+import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.PropagationContext;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.util.index.AlphaRangeIndex;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -28,20 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.drools.core.base.ValueType;
-import org.drools.core.common.BaseNode;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.NetworkNode;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.rule.IndexableConstraint;
-import org.drools.core.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.core.rule.accessor.FieldValue;
-import org.drools.core.rule.accessor.ReadAccessor;
-import org.drools.core.common.PropagationContext;
-import org.drools.core.util.index.AlphaRangeIndex;
-import org.drools.core.util.index.IndexUtil.ConstraintType;
-
-import static org.drools.core.util.index.IndexUtil.isBigDecimalEqualityConstraint;
+import static org.drools.base.util.index.IndexUtil.isBigDecimalEqualityConstraint;
 
 public class CompositeObjectSinkAdapter implements ObjectSinkPropagator {
 
@@ -206,10 +209,10 @@ public class CompositeObjectSinkAdapter implements ObjectSinkPropagator {
     }
 
     private static boolean isHashable( IndexableConstraint indexableConstraint ) {
-        return indexableConstraint.getConstraintType() == ConstraintType.EQUAL && indexableConstraint.getField() != null &&
+        return indexableConstraint.getConstraintType() == ConstraintTypeOperator.EQUAL && indexableConstraint.getField() != null &&
                 indexableConstraint.getFieldExtractor().getValueType() != ValueType.OBJECT_TYPE &&
-                !isBigDecimalEqualityConstraint(indexableConstraint) &&
-                // our current implementation does not support hashing of deeply nested properties
+               !isBigDecimalEqualityConstraint(indexableConstraint) &&
+               // our current implementation does not support hashing of deeply nested properties
                 indexableConstraint.getFieldExtractor().getIndex() >= 0;
     }
 
@@ -472,7 +475,7 @@ public class CompositeObjectSinkAdapter implements ObjectSinkPropagator {
         AlphaNodeFieldConstraint fieldConstraint = alphaNode.getConstraint();
         if (fieldConstraint instanceof IndexableConstraint) {
             IndexableConstraint indexableConstraint = (IndexableConstraint) fieldConstraint;
-            ConstraintType constraintType = indexableConstraint.getConstraintType();
+            ConstraintTypeOperator constraintType = indexableConstraint.getConstraintType();
             return (constraintType.isAscending() || constraintType.isDescending()) &&
                     indexableConstraint.getField() != null && !indexableConstraint.getField().isNull() &&
                     indexableConstraint.getFieldExtractor().getValueType() != ValueType.OBJECT_TYPE &&
@@ -900,7 +903,7 @@ public class CompositeObjectSinkAdapter implements ObjectSinkPropagator {
 
         private int index;
         private Object value;
-        private boolean isNull;
+        private boolean isNull = false;
         private int hashCode;
 
         public HashKey() { }
@@ -938,12 +941,17 @@ public class CompositeObjectSinkAdapter implements ObjectSinkPropagator {
                              final Object value,
                              final ReadAccessor extractor) {
             this.index = index;
-            isNull = extractor.isNullValue( null, value );
+            Object extractedValue = extractor.getValue( null, value );
 
-            if ( !isNull ) {
-                this.value = extractor.getValue( null, value );
-                this.setHashCode( this.value != null ? this.value.hashCode() : 0 );
+            if ( extractedValue != null ) {
+                try {
+                    this.setHashCode(extractedValue.hashCode());
+                } catch (UnsupportedOperationException e) {
+                    this.setHashCode( 0 );
+                }
+                this.value = extractedValue;
             } else {
+                this.isNull = true;
                 this.setHashCode( 0 );
             }
         }

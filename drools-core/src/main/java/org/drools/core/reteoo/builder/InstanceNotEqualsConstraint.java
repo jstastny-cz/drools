@@ -1,32 +1,34 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo.builder;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.rule.ContextEntry;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.constraint.BetaNodeFieldConstraint;
-import org.drools.core.reteoo.Tuple;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.rule.ContextEntry;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.kie.api.runtime.rule.FactHandle;
 
 public class InstanceNotEqualsConstraint
     implements
@@ -83,11 +85,11 @@ public class InstanceNotEqualsConstraint
     }
 
     public boolean isAllowedCachedLeft(final ContextEntry context,
-                                       final InternalFactHandle handle) {
+                                       final FactHandle handle) {
         return ((InstanceNotEqualsConstraintContextEntry) context).left != handle.getObject();
     }
 
-    public boolean isAllowedCachedRight(final Tuple tuple,
+    public boolean isAllowedCachedRight(final BaseTuple tuple,
                                         final ContextEntry context) {
         return tuple.getObject( this.otherPattern.getTupleIndex()) != ((InstanceNotEqualsConstraintContextEntry) context).right;
     }
@@ -161,13 +163,13 @@ public class InstanceNotEqualsConstraint
             this.entry = entry;
         }
 
-        public void updateFromTuple(final ReteEvaluator reteEvaluator,
-                                    final Tuple tuple) {
+        public void updateFromTuple(final ValueResolver valueResolver,
+                                    final BaseTuple tuple) {
             this.left = tuple.getObject( this.pattern.getTupleIndex());
         }
 
-        public void updateFromFactHandle(final ReteEvaluator reteEvaluator,
-                                         final InternalFactHandle handle) {
+        public void updateFromFactHandle(final ValueResolver valueResolver,
+                                         final FactHandle handle) {
             this.right = handle.getObject();
         }
 

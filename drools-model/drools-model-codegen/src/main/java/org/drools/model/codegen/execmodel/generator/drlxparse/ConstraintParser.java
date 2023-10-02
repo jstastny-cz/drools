@@ -1,26 +1,28 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator.drlxparse;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -71,6 +73,8 @@ import org.drools.mvel.parser.ast.expr.PointFreeExpr;
 import org.drools.mvel.parser.printer.PrintUtil;
 import org.drools.mvelcompiler.CompiledExpressionResult;
 import org.drools.mvelcompiler.ConstraintCompiler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.github.javaparser.ast.expr.BinaryExpr.Operator.AND;
 import static com.github.javaparser.ast.expr.BinaryExpr.Operator.DIVIDE;
@@ -116,6 +120,8 @@ import static org.drools.mvel.parser.utils.AstUtils.isLogicalOperator;
  *
  */
 public class ConstraintParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ConstraintParser.class);
 
     private static final List<Operator> ARITHMETIC_OPERATORS = asList(PLUS, MINUS, MULTIPLY, DIVIDE, REMAINDER);
     private final RuleContext context;
@@ -169,7 +175,25 @@ public class ConstraintParser {
             }
         });
 
+        logWarnIfNoReactOnCausedByVariableFromDifferentPattern(drlxParseResult);
+
         return drlxParseResult;
+    }
+
+    private void logWarnIfNoReactOnCausedByVariableFromDifferentPattern(DrlxParseResult drlxParseResult) {
+        if (drlxParseResult instanceof DrlxParseFail) {
+            return;
+        }
+        if (drlxParseResult instanceof MultipleDrlxParseSuccess) {
+            Arrays.asList(((MultipleDrlxParseSuccess) drlxParseResult).getResults()).forEach(this::logWarnIfNoReactOnCausedByVariableFromDifferentPattern);
+            return;
+        }
+        SingleDrlxParseSuccess result = (SingleDrlxParseSuccess) drlxParseResult;
+        if (context.getCurrentConstraintDescr().isPresent() && !result.getVariablesFromDifferentPattern().isEmpty() && result.getReactOnProperties().isEmpty()) {
+            LOG.warn("{} is not relevant to this pattern, so it causes class reactivity. " +
+                     "Consider placing this constraint in the original pattern if possible : {}",
+                     result.getVariablesFromDifferentPattern(), result.getOriginalDrlConstraint());
+        }
     }
 
     private void addDeclaration(DrlxExpression drlx, SingleDrlxParseSuccess singleResult, String bindId) {
@@ -323,6 +347,7 @@ public class ConstraintParser {
 
             return new SingleDrlxParseSuccess(patternType, bindingId, combo, exprType)
                     .setReactOnProperties( expressionTyperContext.getReactOnProperties() )
+                    .setVariablesFromDifferentPattern(expressionTyperContext.getVariablesFromDifferentPattern())
                     .setUsedDeclarations( expressionTyperContext.getUsedDeclarations() )
                     .setImplicitCastExpression( expressionTyperContext.getInlineCastExpression() )
                     .setNullSafeExpressions(expressionTyperContext.getNullSafeExpressions())
@@ -676,6 +701,7 @@ public class ConstraintParser {
                 .setUsedDeclarationsOnLeft( usedDeclarationsOnLeft )
                 .setUnification( constraint.isUnification() )
                 .setReactOnProperties( expressionTyperContext.getReactOnProperties() )
+                .setVariablesFromDifferentPattern(expressionTyperContext.getVariablesFromDifferentPattern())
                 .setLeft( left )
                 .setRight( right )
                 .setBetaConstraint(isBetaConstraint)

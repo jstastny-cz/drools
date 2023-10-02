@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 JBoss Inc
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler;
 
 import java.util.ArrayList;
@@ -31,52 +33,54 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.drools.base.base.ClassObjectType;
+import org.drools.base.base.DroolsQuery;
+import org.drools.base.base.EnabledBoolean;
+import org.drools.base.base.ObjectType;
+import org.drools.base.base.SalienceInteger;
+import org.drools.base.base.extractors.ArrayElementReader;
+import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
+import org.drools.base.definitions.InternalKnowledgePackage;
+import org.drools.base.definitions.impl.KnowledgePackageImpl;
+import org.drools.base.definitions.rule.impl.QueryImpl;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.facttemplates.FactTemplateObjectType;
+import org.drools.base.rule.Accumulate;
+import org.drools.base.rule.AsyncReceive;
+import org.drools.base.rule.AsyncSend;
+import org.drools.base.rule.ConditionalBranch;
+import org.drools.base.rule.ConditionalElement;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.EvalCondition;
+import org.drools.base.rule.Forall;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.MultiAccumulate;
+import org.drools.base.rule.NamedConsequence;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.PatternSource;
+import org.drools.base.rule.QueryArgument;
+import org.drools.base.rule.QueryElement;
+import org.drools.base.rule.RuleConditionElement;
+import org.drools.base.rule.SingleAccumulate;
+import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.rule.WindowDeclaration;
+import org.drools.base.rule.accessor.Accumulator;
+import org.drools.base.rule.accessor.DataProvider;
+import org.drools.base.rule.accessor.Enabled;
+import org.drools.base.rule.accessor.EvalExpression;
+import org.drools.base.rule.accessor.PatternExtractor;
+import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.rule.accessor.Salience;
+import org.drools.base.rule.constraint.QueryNameConstraint;
+import org.drools.base.time.impl.Timer;
 import org.drools.core.base.ClassFieldAccessorCache;
-import org.drools.core.base.ClassObjectType;
-import org.drools.core.base.DroolsQuery;
-import org.drools.core.base.EnabledBoolean;
-import org.drools.core.base.SalienceInteger;
+import org.drools.core.base.DroolsQueryImpl;
 import org.drools.core.base.accumulators.CountAccumulateFunction;
-import org.drools.core.base.extractors.ArrayElementReader;
-import org.drools.core.base.extractors.SelfReferenceClassFieldReader;
-import org.drools.core.definitions.InternalKnowledgePackage;
-import org.drools.core.definitions.impl.KnowledgePackageImpl;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.facttemplates.FactTemplateObjectType;
 import org.drools.core.reteoo.CoreComponentFactory;
-import org.drools.core.rule.Accumulate;
-import org.drools.core.rule.AsyncReceive;
-import org.drools.core.rule.AsyncSend;
-import org.drools.core.rule.Behavior;
-import org.drools.core.rule.ConditionalBranch;
-import org.drools.core.rule.ConditionalElement;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.EntryPointId;
-import org.drools.core.rule.EvalCondition;
-import org.drools.core.rule.Forall;
-import org.drools.core.rule.GroupElement;
-import org.drools.core.rule.MultiAccumulate;
-import org.drools.core.rule.NamedConsequence;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.PatternSource;
-import org.drools.core.rule.QueryArgument;
-import org.drools.core.rule.QueryElement;
-import org.drools.core.definitions.rule.impl.QueryImpl;
-import org.drools.core.rule.RuleConditionElement;
-import org.drools.core.rule.SingleAccumulate;
+import org.drools.core.rule.BehaviorRuntime;
 import org.drools.core.rule.SlidingLengthWindow;
 import org.drools.core.rule.SlidingTimeWindow;
-import org.drools.core.rule.TypeDeclaration;
-import org.drools.core.rule.WindowDeclaration;
-import org.drools.core.rule.constraint.QueryNameConstraint;
-import org.drools.core.rule.accessor.Accumulator;
-import org.drools.core.rule.accessor.DataProvider;
-import org.drools.core.rule.accessor.Enabled;
-import org.drools.core.rule.accessor.EvalExpression;
-import org.drools.core.rule.accessor.ReadAccessor;
-import org.drools.core.base.ObjectType;
-import org.drools.core.rule.accessor.PatternExtractor;
-import org.drools.core.rule.accessor.Salience;
 import org.drools.model.AccumulatePattern;
 import org.drools.model.Argument;
 import org.drools.model.Binding;
@@ -117,7 +121,6 @@ import org.drools.model.functions.Function0;
 import org.drools.model.functions.Function1;
 import org.drools.model.functions.Predicate1;
 import org.drools.model.functions.accumulate.AccumulateFunction;
-import org.drools.model.impl.DeclarationImpl;
 import org.drools.model.impl.Exchange;
 import org.drools.model.patterns.CompositePatterns;
 import org.drools.model.patterns.EvalImpl;
@@ -149,14 +152,12 @@ import org.kie.api.definition.rule.Propagation;
 import org.kie.api.definition.type.Role;
 import org.kie.internal.builder.KnowledgeBuilderConfiguration;
 import org.kie.internal.builder.conf.PropertySpecificOption;
-import org.kie.internal.ruleunit.RuleUnitUtil;
 
 import static java.util.stream.Collectors.toList;
+import static org.drools.base.rule.GroupElement.AND;
+import static org.drools.base.rule.GroupElement.OR;
 import static org.drools.compiler.rule.builder.RuleBuilder.buildTimer;
-import static org.drools.core.rule.GroupElement.AND;
-import static org.drools.core.rule.GroupElement.OR;
 import static org.drools.model.DSL.declarationOf;
-import static org.drools.model.DSL.entryPoint;
 import static org.drools.model.bitmask.BitMaskUtil.calculatePatternMask;
 import static org.drools.model.functions.FunctionUtils.toFunctionN;
 import static org.drools.model.impl.NamesGenerator.generateName;
@@ -336,7 +337,7 @@ public class KiePackagesBuilder {
         }
     }
 
-    private org.drools.core.time.impl.Timer parseTimer( RuleImpl ruleImpl, String timerExpr, RuleContext ctx ) {
+    private Timer parseTimer(RuleImpl ruleImpl, String timerExpr, RuleContext ctx ) {
         return buildTimer(timerExpr, null, expr -> buildTimerExpression( expr, ctx.getDeclarations() ), e -> {
             throw new IllegalArgumentException("Invalid timer expression: '" + e + "' in rule " + ruleImpl.getName());
         });
@@ -367,7 +368,7 @@ public class KiePackagesBuilder {
         Declaration[] declarations = new Declaration[args.length];
         for (int i = 0; i < args.length; i++) {
             int index = i;
-            LambdaReadAccessor accessor = new LambdaReadAccessor(index, args[index].getType(), obj -> ( (DroolsQuery) obj ).getElements()[index] );
+            LambdaReadAccessor accessor = new LambdaReadAccessor(index, args[index].getType(), obj -> ( (DroolsQueryImpl) obj ).getElements()[index] );
             declarations[i] = new Declaration( args[i].getName(), accessor, pattern, false );
             pattern.addDeclaration( declarations[i] );
             ctx.addQueryDeclaration( args[i], declarations[i] );
@@ -455,20 +456,6 @@ public class KiePackagesBuilder {
             return and.getChildren().isEmpty() || requiresLeftActivation( and.getChildren().get( 0 ) );
         }
         return rce instanceof QueryElement;
-    }
-
-    private Variable getUnitVariable( RuleContext ctx, KnowledgePackageImpl pkg, View view ) {
-        String unitClassName = ctx.getRule().getRuleUnitClassName();
-        for (Variable<?> var : view.getBoundVariables()) {
-            if ( var instanceof DeclarationImpl && var.getType().getName().equals( unitClassName ) ) {
-                return ( (DeclarationImpl) var ).setSource( entryPoint( RuleUnitUtil.RULE_UNIT_ENTRY_POINT ) );
-            }
-        }
-        try {
-            return declarationOf( pkg.getTypeResolver().resolveType( unitClassName ), entryPoint( RuleUnitUtil.RULE_UNIT_ENTRY_POINT ) );
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException( e );
-        }
     }
 
     private RuleConditionElement conditionToElement( RuleContext ctx, GroupElement group, Condition condition ) {
@@ -580,7 +567,7 @@ public class KiePackagesBuilder {
             pattern = new Pattern( ctx.getNextPatternIndex(), type );
         }
 
-        PatternImpl<?> sourcePattern = (PatternImpl<?>) accumulatePattern.getPattern();
+        org.drools.model.Pattern sourcePattern = accumulatePattern.getPattern();
         Set<String> usedVariableName = new LinkedHashSet<>();
 
         if (sourcePattern != null) {
@@ -612,26 +599,30 @@ public class KiePackagesBuilder {
             addInnerBindings(bindings, accumulatePattern.getAccumulateFunctions(), accumulatePattern.getCondition());
         }
 
-        pattern.setSource(buildAccumulate( ctx, accumulatePattern, source, pattern, usedVariableName, bindings ));
+        pattern.setSource(buildAccumulate( ctx, accumulatePattern, group, source, pattern, usedVariableName, bindings ));
 
         return existingPattern ? null : pattern;
     }
 
     private void addInnerBindings(Collection<Binding> bindings, AccumulateFunction[] accumulateFunctions, Condition condition) {
         List<org.drools.model.Declaration> functionArgList = Arrays.stream(accumulateFunctions)
-                                          .map(function -> function.getSource())
+                                          .map(AccumulateFunction::getSource)
                                           .filter(org.drools.model.Declaration.class::isInstance)
                                           .map(org.drools.model.Declaration.class::cast)
                                           .collect(Collectors.toList());
         if (condition instanceof CompositePatterns) {
             CompositePatterns compositePatterns = (CompositePatterns) condition;
             for (Condition c : compositePatterns.getSubConditions()) {
-                Variable<?>[] boundVariables = c.getBoundVariables();
-                Arrays.stream(boundVariables)
-                      .filter(org.drools.model.Declaration.class::isInstance)
-                      .map(org.drools.model.Declaration.class::cast)
-                      .filter(decl -> functionArgList.contains(decl))
-                      .forEach(decl -> bindings.add(new SelfPatternBiding<>(decl)));
+                try {
+                    Variable<?>[] boundVariables = c.getBoundVariables();
+                    Arrays.stream(boundVariables)
+                          .filter(org.drools.model.Declaration.class::isInstance)
+                          .map(org.drools.model.Declaration.class::cast)
+                          .filter(functionArgList::contains)
+                          .forEach(decl -> bindings.add(new SelfPatternBiding<>(decl)));
+                } catch (UnsupportedOperationException e) {
+                    // skip (ex: eval doesn't support this operation)
+                }
             }
         }
     }
@@ -717,10 +708,10 @@ public class KiePackagesBuilder {
         if (ge.getType() == OR) {
             ctx.startOrCondition();
         }
-        for (int i = 0; i < subconditions.size(); i++) {
-            RuleConditionElement element = conditionToElement( ctx, ge, subconditions.get(i) );
+        for (Condition subcondition : subconditions) {
+            RuleConditionElement element = conditionToElement(ctx, ge, subcondition);
             if (element != null) {
-                ge.addChild( element );
+                ge.addChild(element);
             }
         }
         if (ge.getType() == OR) {
@@ -829,12 +820,11 @@ public class KiePackagesBuilder {
         }
     }
 
-    private Accumulate buildAccumulate(RuleContext ctx, AccumulatePattern accPattern,
+    private Accumulate buildAccumulate(RuleContext ctx, AccumulatePattern accPattern, GroupElement group,
                                        RuleConditionElement source, Pattern pattern,
                                        Set<String> usedVariableName, Collection<Binding> bindings) {
         boolean isGroupBy = accPattern instanceof GroupByPattern;
         AccumulateFunction[] accFunctions = accPattern.getAccumulateFunctions();
-        Declaration groupByDeclaration  = null;
         Class selfType = (isGroupBy || accFunctions.length > 1 ) ? Object[].class : accFunctions[0].getResult().getType();
         ReadAccessor selfReader = new SelfReferenceClassFieldReader( selfType );
         int arrayIndexOffset = 0;
@@ -846,46 +836,30 @@ public class KiePackagesBuilder {
                 arrayIndexOffset = 1;
             }
 
-            // GroupBy  key is always the last element in the result array
-            Variable groupVar = (( GroupByPattern<?, ?> ) accPattern).getVarKey();
-            groupByDeclaration  = new Declaration(groupVar.getName(),
-                                                  new ArrayElementReader( selfReader, accFunctions.length, groupVar.getType() ),
-                                                  pattern, true);
-            pattern.addDeclaration( groupByDeclaration );
+            GroupByPatternImpl<?, ?> groupByPattern = (GroupByPatternImpl<?, ?>) accPattern;
+            Variable<?> groupVar = groupByPattern.getVarKey();
+            // GroupBy key is always the last element in the result array
+            Declaration groupByDeclaration = new Declaration(groupVar.getName(),
+                    new ArrayElementReader( selfReader, accPattern.getAccumulateFunctions().length, groupVar.getType() ),
+                    pattern, true);
+            pattern.addDeclaration(groupByDeclaration);
+            ctx.addGroupByDeclaration(groupByPattern.getVarKey(), groupByDeclaration);
+
+            if (accPattern.getPattern() instanceof GroupByPattern) {
+                buildAccumulate(ctx, group, accPattern);
+            }
         }
-        Accumulate accumulate;
 
         Accumulator[] accumulators = new Accumulator[accFunctions.length];
         List<Declaration> requiredDeclarationList = new ArrayList<>();
         for (int i = 0; i < accFunctions.length; i++) {
-            Variable boundVar = processFunctions(ctx, accPattern, source, pattern, usedVariableName,
-                             bindings,
-                             isGroupBy, accFunctions[i],
+            processFunctions(ctx, accPattern, source, pattern, usedVariableName, bindings, isGroupBy, accFunctions[i],
                              selfReader, accumulators, requiredDeclarationList, arrayIndexOffset, i);
-            if (isGroupBy) {
-                ctx.addGroupByDeclaration(((GroupByPattern) accPattern).getVarKey(), groupByDeclaration);
-            }
         }
 
-        if (accFunctions.length == 1) {
-            accumulate = new SingleAccumulate(source,
-                                              requiredDeclarationList.toArray(new Declaration[requiredDeclarationList.size()]),
-                                              accumulators[0]);
-        } else {
-            if (source instanceof Pattern) {
-                requiredDeclarationList.forEach( (( Pattern ) source)::addDeclaration );
-            }
-            accumulate = new MultiAccumulate( source, new Declaration[0], accumulators,
-                                              accumulators.length + ((isGroupBy) ? 1 : 0) ); // if this is a groupby +1 for the key
-        }
-
+        Accumulate accumulate = createAccumulate(source, isGroupBy, accFunctions, accumulators, requiredDeclarationList);
         if (isGroupBy) {
-            GroupByPatternImpl groupBy = ( GroupByPatternImpl ) accPattern;
-            Declaration[] groupingDeclarations = new Declaration[groupBy.getVars().length];
-            for (int i = 0; i < groupBy.getVars().length; i++) {
-                groupingDeclarations[i] = ctx.getDeclaration( groupBy.getVars()[i] );
-            }
-            accumulate = new LambdaGroupByAccumulate(accumulate, groupingDeclarations, groupBy.getGroupingFunction());
+            accumulate = createGroupByAccumulate(ctx, (GroupByPatternImpl) accPattern, accumulate);
         }
 
         for (Variable boundVar : accPattern.getBoundVariables()) {
@@ -895,7 +869,28 @@ public class KiePackagesBuilder {
         return accumulate;
     }
 
-    private Variable processFunctions(RuleContext ctx, AccumulatePattern accPattern, RuleConditionElement source, Pattern pattern,
+    private static Accumulate createAccumulate(RuleConditionElement source, boolean isGroupBy, AccumulateFunction[] accFunctions, Accumulator[] accumulators, List<Declaration> requiredDeclarationList) {
+        if (accFunctions.length == 1) {
+            return new SingleAccumulate(source,
+                    requiredDeclarationList.toArray(new Declaration[requiredDeclarationList.size()]),
+                    accumulators[0]);
+        }
+        if (source instanceof Pattern) {
+            requiredDeclarationList.forEach( (( Pattern ) source)::addDeclaration );
+        }
+        return new MultiAccumulate(source, new Declaration[0], accumulators,
+                                          accumulators.length + (isGroupBy ? 1 : 0) ); // if this is a groupby +1 for the key
+    }
+
+    private static Accumulate createGroupByAccumulate(RuleContext ctx, GroupByPatternImpl groupByPattern, Accumulate accumulate) {
+        Declaration[] groupingDeclarations = new Declaration[groupByPattern.getVars().length];
+        for (int i = 0; i < groupByPattern.getVars().length; i++) {
+            groupingDeclarations[i] = ctx.getDeclaration( groupByPattern.getVars()[i] );
+        }
+        return new LambdaGroupByAccumulate(accumulate, groupingDeclarations, groupByPattern.getGroupingFunction());
+    }
+
+    private void processFunctions(RuleContext ctx, AccumulatePattern accPattern, RuleConditionElement source, Pattern pattern,
                                   Set<String> usedVariableName, Collection<Binding> bindings, boolean isGroupBy, AccumulateFunction accFunction,
                                   ReadAccessor selfReader, Accumulator[] accumulators,
                                   List<Declaration> requiredDeclarationList, int arrayIndexOffset, int i) {
@@ -926,7 +921,6 @@ public class KiePackagesBuilder {
 
         Declaration[] requiredDeclarations = getRequiredDeclarationsForAccumulate(ctx, source, accFunction, binding, bindingEvaluator);
         requiredDeclarationList.addAll(Arrays.asList(requiredDeclarations));
-        return boundVar;
     }
 
     private Binding findBindingForAccumulate( Collection<Binding> bindings, AccumulateFunction accFunction ) {
@@ -1062,7 +1056,7 @@ public class KiePackagesBuilder {
                     if ( !ctx.getPkg().getWindowDeclarations().containsKey( window.getName() ) ) {
                         createWindowReference( ctx, window );
                     }
-                    pattern.setSource( new org.drools.core.rule.WindowReference( window.getName() ) );
+                    pattern.setSource( new org.drools.base.rule.WindowReference( window.getName() ) );
                 } else if ( decl.getSource() instanceof From ) {
                     pattern.setSource( buildFrom( ctx, pattern, (From) decl.getSource() ) );
                 } else if ( decl.getSource() instanceof UnitData ) {
@@ -1094,9 +1088,9 @@ public class KiePackagesBuilder {
         return pattern;
     }
 
-    private org.drools.core.rule.From buildFrom( RuleContext ctx, Pattern pattern, From<?> from ) {
+    private org.drools.base.rule.From buildFrom(RuleContext ctx, Pattern pattern, From<?> from ) {
         DataProvider provider = createFromDataProvider( ctx, from );
-        org.drools.core.rule.From fromSource = new org.drools.core.rule.From(provider);
+        org.drools.base.rule.From fromSource = new org.drools.base.rule.From(provider);
         fromSource.setResultPattern( pattern );
         return fromSource;
     }
@@ -1139,7 +1133,7 @@ public class KiePackagesBuilder {
         ctx.getPkg().addWindowDeclaration(windowDeclaration);
     }
 
-    private Behavior createWindow( WindowDefinition window ) {
+    private BehaviorRuntime createWindow(WindowDefinition window) {
         switch (window.getType()) {
             case LENGTH:
                 return new SlidingLengthWindow( (int) window.getValue() );
@@ -1160,7 +1154,7 @@ public class KiePackagesBuilder {
         createConstraint( ctx, pattern, constraint ).ifPresent( pattern::addConstraint );
     }
 
-    private Optional<org.drools.core.rule.constraint.Constraint> createConstraint(RuleContext ctx, Pattern pattern, Constraint constraint ) {
+    private Optional<org.drools.base.rule.constraint.Constraint> createConstraint(RuleContext ctx, Pattern pattern, Constraint constraint ) {
         if (constraint.getType() == Constraint.Type.SINGLE) {
             SingleConstraint singleConstraint = (SingleConstraint) constraint;
             if (singleConstraint.getVariables().length > 0 || singleConstraint.equals(SingleConstraint.FALSE)) {
@@ -1175,7 +1169,7 @@ public class KiePackagesBuilder {
         }
     }
 
-    private org.drools.core.rule.constraint.Constraint createSingleConstraint(RuleContext ctx, Pattern pattern, SingleConstraint singleConstraint ) {
+    private org.drools.base.rule.constraint.Constraint createSingleConstraint(RuleContext ctx, Pattern pattern, SingleConstraint singleConstraint ) {
         Variable[] vars = singleConstraint.getVariables();
         Declaration[] declarations = new Declaration[vars.length];
         Declaration unificationDeclaration = collectConstraintDeclarations( ctx, pattern, singleConstraint, vars, declarations );

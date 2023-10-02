@@ -1,20 +1,44 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo.builder;
+
+import org.drools.base.RuleBuildContext;
+import org.drools.base.common.NetworkNode;
+import org.drools.base.common.RuleBasePartitionId;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.RuleComponent;
+import org.drools.base.rule.RuleConditionElement;
+import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
+import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.constraint.XpathConstraint;
+import org.drools.core.common.BaseNode;
+import org.drools.core.common.InternalWorkingMemory;
+import org.drools.core.impl.InternalRuleBase;
+import org.drools.core.reteoo.LeftTupleSource;
+import org.drools.core.reteoo.ObjectSource;
+import org.drools.core.reteoo.ObjectTypeNode;
+import org.drools.core.reteoo.PathEndNode;
+import org.drools.core.reteoo.TerminalNode;
+import org.drools.core.time.TemporalDependencyMatrix;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -23,35 +47,14 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 
-import org.drools.core.common.BaseNode;
-import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.NetworkNode;
-import org.drools.core.common.RuleBasePartitionId;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.impl.RuleBase;
-import org.drools.core.reteoo.LeftTupleSource;
-import org.drools.core.reteoo.ObjectSource;
-import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.reteoo.PathEndNode;
-import org.drools.core.reteoo.TerminalNode;
-import org.drools.core.rule.EntryPointId;
-import org.drools.core.rule.GroupElement;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.RuleConditionElement;
-import org.drools.core.rule.constraint.XpathConstraint;
-import org.drools.core.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.core.rule.constraint.BetaNodeFieldConstraint;
-import org.drools.core.rule.RuleComponent;
-import org.drools.core.time.TemporalDependencyMatrix;
-
-import static org.drools.core.rule.TypeDeclaration.NEVER_EXPIRES;
+import static org.drools.base.rule.TypeDeclaration.NEVER_EXPIRES;
 
 /**
  * A build context for Reteoo Builder
  */
-public class BuildContext {
+public class BuildContext implements RuleBuildContext {
 
-    private List<TerminalNode> terminals = new ArrayList<>();
+    private final List<TerminalNode> terminals = new ArrayList<>();
 
     // tuple source to attach next node to
     private LeftTupleSource tupleSource;
@@ -61,7 +64,7 @@ public class BuildContext {
     private List<Pattern> patterns;
 
     // rule base to add rules to
-    private final RuleBase ruleBase;
+    private final InternalRuleBase ruleBase;
     // rule being added at this moment
     private RuleImpl rule;
     private GroupElement subRule;
@@ -79,7 +82,6 @@ public class BuildContext {
     // the current entry point
     private EntryPointId                     currentEntryPoint;
     private boolean                          tupleMemoryEnabled;
-    private boolean                          objectTypeNodeMemoryEnabled;
     private boolean                          query;
 
     private int                              subRuleIndex;
@@ -111,11 +113,10 @@ public class BuildContext {
 
     private final Collection<InternalWorkingMemory> workingMemories;
 
-    public BuildContext(RuleBase ruleBase, Collection<InternalWorkingMemory> workingMemories) {
+    public BuildContext(InternalRuleBase ruleBase, Collection<InternalWorkingMemory> workingMemories) {
         this.ruleBase = ruleBase;
         this.workingMemories = workingMemories;
         this.tupleMemoryEnabled = true;
-        this.objectTypeNodeMemoryEnabled = true;
         this.currentEntryPoint = EntryPointId.DEFAULT;
         this.attachPQN = true;
         this.emptyForAllBetaConstraints = false;
@@ -186,7 +187,7 @@ public class BuildContext {
     /**
      * Returns context rulebase
      */
-    public RuleBase getRuleBase() {
+    public InternalRuleBase getRuleBase() {
         return this.ruleBase;
     }
 
@@ -282,14 +283,6 @@ public class BuildContext {
 
     public void setTupleMemoryEnabled(boolean hasLeftMemory) {
         this.tupleMemoryEnabled = hasLeftMemory;
-    }
-
-    public boolean isObjectTypeNodeMemoryEnabled() {
-        return objectTypeNodeMemoryEnabled;
-    }
-
-    public void setObjectTypeNodeMemoryEnabled(boolean hasObjectTypeMemory) {
-        this.objectTypeNodeMemoryEnabled = hasObjectTypeMemory;
     }
 
     public boolean isQuery() {
@@ -437,8 +430,8 @@ public class BuildContext {
         return terminated;
     }
 
-    void setTerminated(boolean terminated) {
-        this.terminated = terminated;
+    void terminate() {
+        this.terminated = true;
     }
 
     public String getConsequenceName() {

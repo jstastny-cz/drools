@@ -1,32 +1,26 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.phreak;
 
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.drools.core.common.EventFactHandle;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.core.common.DefaultEventHandle;
 import org.drools.core.common.InternalAgenda;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
@@ -36,8 +30,7 @@ import org.drools.core.common.PropagationContext;
 import org.drools.core.common.PropagationContextFactory;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.common.TupleSets;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.AbstractTerminalNode;
 import org.drools.core.reteoo.AccumulateNode;
 import org.drools.core.reteoo.AccumulateNode.AccumulateContext;
@@ -58,11 +51,9 @@ import org.drools.core.reteoo.LeftTupleNode;
 import org.drools.core.reteoo.LeftTupleSink;
 import org.drools.core.reteoo.LeftTupleSinkNode;
 import org.drools.core.reteoo.LeftTupleSource;
-import org.drools.core.reteoo.NodeTypeEnums;
 import org.drools.core.reteoo.ObjectSink;
 import org.drools.core.reteoo.ObjectSource;
 import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.reteoo.ObjectTypeNode.ObjectTypeNodeMemory;
 import org.drools.core.reteoo.PathEndNode;
 import org.drools.core.reteoo.PathMemory;
 import org.drools.core.reteoo.QueryElementNode;
@@ -81,6 +72,16 @@ import org.drools.core.util.FastIterator;
 import org.kie.api.definition.rule.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.drools.core.phreak.BuildtimeSegmentUtilities.JOIN_NODE_BIT;
 import static org.drools.core.phreak.BuildtimeSegmentUtilities.NOT_NODE_BIT;
@@ -106,7 +107,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
      * For add tuples are processed after the segments and pmems have been adjusted
      */
     @Override
-    public void addRule(TerminalNode tn, Collection<InternalWorkingMemory> wms, RuleBase kBase) {
+    public void addRule(TerminalNode tn, Collection<InternalWorkingMemory> wms, InternalRuleBase kBase) {
         if (log.isTraceEnabled()) {
             log.trace("Adding Rule {}", tn.getRule().getName());
         }
@@ -166,7 +167,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
      * For remove tuples are processed before the segments and pmems have been adjusted
      */
     @Override
-    public void removeRule( TerminalNode tn, Collection<InternalWorkingMemory> wms, RuleBase kBase) {
+    public void removeRule( TerminalNode tn, Collection<InternalWorkingMemory> wms, InternalRuleBase kBase) {
         if (log.isTraceEnabled()) {
             log.trace("Removing Rule {}", tn.getRule().getName());
         }
@@ -772,7 +773,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
         ObjectSource source = bn.getRightInput();
         if (source instanceof WindowNode) {
             WindowNode.WindowMemory memory = wm.getNodeMemory(((WindowNode) source));
-            for (EventFactHandle factHandle : memory.getFactHandles()) {
+            for (DefaultEventHandle factHandle : memory.getFactHandles()) {
                 factHandle.forEachRightTuple( rt -> {
                     if (source.equals(rt.getTupleSink())) {
                         rt.unlinkFromRightParent();
@@ -827,26 +828,25 @@ class LazyPhreakBuilder implements PhreakBuilder {
                     Tuple        lt = BetaNode.getFirstTuple(bm.getLeftTupleMemory(), it);
                     for (; lt != null; lt = (LeftTuple) it.next(lt)) {
                         AccumulateContext accctx = (AccumulateContext) lt.getContextObject();
-                        visitChild(accctx.getResultLeftTuple(), insert, wm, rule);
+                        visitChild( (LeftTuple) accctx.getResultLeftTuple(), insert, wm, rule);
                     }
-                } else if (NodeTypeEnums.ExistsNode == node.getType() &&
-                        !((BetaNode)node).isRightInputIsRiaNode()) { // do not process exists with subnetworks
+                } else if (NodeTypeEnums.ExistsNode == node.getType() && !node.isRightInputIsRiaNode()) { // do not process exists with subnetworks
                     // If there is a subnetwork, then there is no populated RTM, but the LTM is populated,
-                    // so this would be procsssed in the "else".
+                    // so this would be processed in the "else".
 
                     bm = (BetaMemory) wm.getNodeMemory((MemoryFactory) node);
                     FastIterator it = bm.getRightTupleMemory().fullFastIterator(); // done off the RightTupleMemory, as exists only have unblocked tuples on the left side
-                    RightTuple   rt = (RightTuple) BetaNode.getFirstTuple(bm.getRightTupleMemory(), it);
-                    for (; rt != null; rt = (RightTuple) it.next(rt)) {
+                    for (RightTuple rt = (RightTuple) BetaNode.getFirstTuple(bm.getRightTupleMemory(), it); rt != null; rt = (RightTuple) it.next(rt)) {
                         for (LeftTuple lt = rt.getBlocked(); lt != null; lt = lt.getBlockedNext()) {
-                            visitChild(wm, insert, rule, it, lt);
+                            visitLeftTuple(wm, insert, rule, lt);
                         }
                     }
                 } else {
                     bm = (BetaMemory) wm.getNodeMemory((MemoryFactory) node);
                     FastIterator it = bm.getLeftTupleMemory().fullFastIterator();
-                    Tuple        lt = BetaNode.getFirstTuple(bm.getLeftTupleMemory(), it);
-                    visitChild(wm, insert, rule, it, lt);
+                    for (LeftTuple lt = (LeftTuple)BetaNode.getFirstTuple(bm.getLeftTupleMemory(), it); lt != null; lt = (LeftTuple) it.next(lt)) {
+                        visitLeftTuple(wm, insert, rule, lt);
+                    }
                 }
                 return;
             } else if (NodeTypeEnums.FromNode == node.getType()) {
@@ -874,14 +874,9 @@ class LazyPhreakBuilder implements PhreakBuilder {
         while (os.getType() != NodeTypeEnums.ObjectTypeNode) {
             os = os.getParentObjectSource();
         }
-        ObjectTypeNode otn  = (ObjectTypeNode) os;
-        final ObjectTypeNodeMemory omem = wm.getNodeMemory(otn);
-        if (omem == null) {
-            // no OTN memory yet, i.e. no inserted matching objects, so no Tuples to process
-            return;
-        }
 
-        Iterator<InternalFactHandle> it = omem.iterator();
+        ObjectTypeNode otn  = (ObjectTypeNode) os;
+        Iterator<InternalFactHandle> it = otn.getFactHandlesIterator(wm);
         while (it.hasNext()) {
             InternalFactHandle fh = it.next();
             fh.forEachLeftTuple( lt -> {
@@ -891,31 +886,27 @@ class LazyPhreakBuilder implements PhreakBuilder {
                 if (lt.getTupleSource().isAssociatedWith(rule)) {
                     visitChild(lt, insert, wm, rule);
 
-                    if (lt.getHandlePrevious() != null) {
+                    if (lt.getHandlePrevious() != null && nextLt != null) {
                         lt.getHandlePrevious().setHandleNext( nextLt );
-                        if (nextLt != null) {
-                            nextLt.setHandlePrevious( lt.getHandlePrevious() );
-                        }
+                        nextLt.setHandlePrevious( lt.getHandlePrevious() );
                     }
                 }
             });
         }
     }
 
-    private static void visitChild(InternalWorkingMemory wm, boolean insert, Rule rule, FastIterator it, Tuple lt) {
-        for (; lt != null; lt = (LeftTuple) it.next(lt)) {
-            LeftTuple childLt = lt.getFirstChild();
-            while (childLt != null) {
-                LeftTuple nextLt = childLt.getHandleNext();
-                visitChild(childLt, insert, wm, rule);
-                childLt = nextLt;
-            }
+    private static void visitLeftTuple(InternalWorkingMemory wm, boolean insert, Rule rule, LeftTuple lt) {
+        LeftTuple childLt = lt.getFirstChild();
+        while (childLt != null) {
+            LeftTuple nextLt = childLt.getHandleNext();
+            visitChild(childLt, insert, wm, rule);
+            childLt = nextLt;
         }
     }
 
     private static void visitChild(LeftTuple lt, boolean insert, InternalWorkingMemory wm, Rule rule) {
         LeftTuple prevLt = null;
-        LeftTupleSinkNode sink = lt.getTupleSink();
+        LeftTupleSinkNode sink = (LeftTupleSinkNode) lt.getTupleSink();
 
         for ( ; sink != null; sink = sink.getNextLeftTupleSinkNode() ) {
 
@@ -958,7 +949,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
     private static void insertPeerRightTuple( LeftTuple lt, InternalWorkingMemory wm, Rule rule, boolean insert ) {
         // There's a shared RightInputAdaterNode, so check if one of its sinks is associated only to the new rule
         LeftTuple prevLt = null;
-        RightInputAdapterNode rian = lt.getTupleSink();
+        RightInputAdapterNode rian = (RightInputAdapterNode) lt.getTupleSink();
 
         for (ObjectSink sink : rian.getObjectSinkPropagator().getSinks()) {
             if (lt != null) {
@@ -1020,7 +1011,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
             }
         } else {
             if (lt.getContextObject() instanceof AccumulateContext) {
-                LeftTuple resultLt = (( AccumulateContext ) lt.getContextObject()).getResultLeftTuple();
+                LeftTuple resultLt = (LeftTuple) (( AccumulateContext ) lt.getContextObject()).getResultLeftTuple();
                 if (resultLt != null) {
                     iterateLeftTuple( resultLt, wm );
                 }
@@ -1260,7 +1251,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
         List<PathMemory> otherPmems = new ArrayList<>();
     }
 
-    private static PathEndNodes getPathEndNodes(RuleBase kBase,
+    private static PathEndNodes getPathEndNodes(InternalRuleBase kBase,
                                                 LeftTupleNode lt,
                                                 TerminalNode tn,
                                                 Rule processedRule,
@@ -1283,7 +1274,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
         return endNodes;
     }
 
-    private static void collectPathEndNodes(RuleBase kBase,
+    private static void collectPathEndNodes(InternalRuleBase kBase,
                                             LeftTupleNode lt,
                                             PathEndNodes endNodes,
                                             TerminalNode tn,
@@ -1332,7 +1323,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
         }
     }
 
-    private static void invalidateRootNode( RuleBase kBase, LeftTupleNode lt ) {
+    private static void invalidateRootNode(InternalRuleBase kBase, LeftTupleNode lt) {
         while (!isRootNode( lt, null )) {
             lt = lt.getLeftTupleSource();
         }
@@ -1502,7 +1493,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
 
     private static boolean processQueryNode(QueryElementNode queryNode, ReteEvaluator reteEvaluator, LeftTupleSource segmentRoot, SegmentMemory smem, List<Memory> memories, long nodePosMask) {
         // Initialize the QueryElementNode and have it's memory reference the actual query SegmentMemory
-        SegmentMemory querySmem = getQuerySegmentMemory(reteEvaluator, segmentRoot, queryNode);
+        SegmentMemory querySmem = getQuerySegmentMemory(reteEvaluator, queryNode);
         QueryElementNode.QueryElementNodeMemory queryNodeMem = smem.createNodeMemory(queryNode, reteEvaluator);
         queryNodeMem.setNodePosMaskBit(nodePosMask);
         queryNodeMem.setQuerySegmentMemory(querySmem);
@@ -1655,7 +1646,7 @@ class LazyPhreakBuilder implements PhreakBuilder {
                 }
 
             } else if (NodeTypeEnums.isTerminalNode(sink)) {
-                pmem = (PathMemory) reteEvaluator.getNodeMemory((MemoryFactory) sink);
+                pmem = reteEvaluator.getNodeMemory((AbstractTerminalNode) sink);
             }
 
             if (pmem != null && smem.getPos() < pmem.getSegmentMemories().length) {

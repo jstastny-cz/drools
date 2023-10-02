@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.compiler.kie.builder.impl;
 
 import java.io.InputStream;
@@ -38,7 +41,7 @@ import org.drools.compiler.kproject.models.KieSessionModelImpl;
 import org.drools.compiler.management.KieContainerMonitor;
 import org.drools.core.SessionConfiguration;
 import org.drools.core.impl.InternalKieContainer;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.management.DroolsManagementAgent;
 import org.drools.core.management.DroolsManagementAgent.CBSKey;
 import org.drools.core.reteoo.RuntimeComponentFactory;
@@ -81,7 +84,7 @@ import org.slf4j.LoggerFactory;
 
 import static java.util.stream.Collectors.toList;
 import static org.drools.compiler.kie.util.InjectionHelper.wireSessionComponents;
-import static org.drools.core.util.Drools.isJndiAvailable;
+import static org.drools.base.util.Drools.isJndiAvailable;
 import static org.drools.util.ClassUtils.convertResourceToClassName;
 
 public class KieContainerImpl
@@ -540,7 +543,7 @@ public class KieContainerImpl
             log.error("Unknown KieSession name: " + kSessionName);
             return null;
         }
-        InternalKnowledgeBase kBase = (InternalKnowledgeBase) getKieBaseFromKieSessionModel( kSessionModel );
+        InternalKnowledgeBase kBase = (InternalKnowledgeBase) getKieBaseFromKieSessionModel(kSessionModel);
         return kBase == null ? null : new StatefulSessionPool(kBase, initialSize, () -> {
             SessionConfiguration sessConf = conf != null ? conf.as(SessionConfiguration.KEY) : kBase.getSessionConfiguration().as(SessionConfiguration.KEY);
             StatefulKnowledgeSessionImpl kSession = stateless ?
@@ -608,11 +611,11 @@ public class KieContainerImpl
         if ( kBase == null ) return null;
 
         KieSession kSession = kBase.newKieSession( conf != null ? conf : getKieSessionConfiguration( kSessionModel ), environment );
-        registerNewKieSession( kSessionModel, ( InternalKnowledgeBase ) kBase, kSession );
+        registerNewKieSession(kSessionModel, (InternalKnowledgeBase) kBase, kSession);
         return kSession;
     }
 
-    private void registerNewKieSession( KieSessionModel kSessionModel, InternalKnowledgeBase kBase, KieSession kSession ) {
+    private void registerNewKieSession(KieSessionModel kSessionModel, InternalKnowledgeBase kBase, KieSession kSession) {
         if (isJndiAvailable()) {
             wireSessionComponents( kSessionModel, kSession );
         }
@@ -725,15 +728,15 @@ public class KieContainerImpl
 
     public void dispose() {
         sessionConfsCache.clear();
-        kBases.values().forEach( kb -> ( (InternalKnowledgeBase) kb ).setKieContainer( null ) );
+        kBases.values().forEach( kb -> ( (InternalKnowledgeBase) kb ).setKieContainer(null));
 
         Set<DroolsManagementAgent.CBSKey> cbskeys = new HashSet<>();
         if ( isMBeanOptionEnabled() ) {
             for (Entry<String, KieSession> kv : kSessions.entrySet()) {
-                cbskeys.add(new DroolsManagementAgent.CBSKey(containerId, ((RuleBase) kv.getValue().getKieBase()).getId(), kv.getKey()));
+                cbskeys.add(new DroolsManagementAgent.CBSKey(containerId, ((InternalRuleBase) kv.getValue().getKieBase()).getId(), kv.getKey()));
             }
             for (Entry<String, StatelessKieSession> kv : statelessKSessions.entrySet()) {
-                cbskeys.add(new DroolsManagementAgent.CBSKey(containerId, ((RuleBase) kv.getValue().getKieBase()).getId(), kv.getKey()));
+                cbskeys.add(new DroolsManagementAgent.CBSKey(containerId, ((InternalRuleBase) kv.getValue().getKieBase()).getId(), kv.getKey()));
             }
         }
 
@@ -748,7 +751,7 @@ public class KieContainerImpl
                 DroolsManagementAgent.getInstance().unregisterKnowledgeSessionBean(c);
             }
             for (KieBase kb : kBases.values()) {
-                DroolsManagementAgent.getInstance().unregisterKnowledgeBase((RuleBase) kb);
+                DroolsManagementAgent.getInstance().unregisterKnowledgeBase((InternalRuleBase) kb);
             }
             DroolsManagementAgent.getInstance().unregisterMBeansFromOwner(this);
         }

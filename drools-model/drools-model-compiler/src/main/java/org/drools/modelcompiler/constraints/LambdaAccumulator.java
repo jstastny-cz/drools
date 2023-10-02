@@ -1,33 +1,35 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.modelcompiler.constraints;
-
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.reteoo.SubnetworkTuple;
-import org.drools.core.reteoo.Tuple;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.accessor.Accumulator;
-import org.kie.api.runtime.rule.AccumulateFunction;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
+
+import org.drools.base.base.ValueResolver;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.accessor.Accumulator;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.reteoo.SubnetworkTuple;
+import org.kie.api.runtime.rule.AccumulateFunction;
+import org.kie.api.runtime.rule.FactHandle;
 
 public abstract class LambdaAccumulator implements Accumulator {
 
@@ -66,18 +68,18 @@ public abstract class LambdaAccumulator implements Accumulator {
     }
 
     @Override
-    public Object init(Object workingMemoryContext, Object context, Tuple leftTuple, Declaration[] declarations, ReteEvaluator reteEvaluator) {
+    public Object init(Object workingMemoryContext, Object context, BaseTuple leftTuple, Declaration[] declarations, ValueResolver valueResolver) {
         context = accumulateFunction.initContext( (Serializable) context );
         return context;
     }
 
     @Override
-    public Object accumulate(Object workingMemoryContext, Object context, Tuple leftTuple, InternalFactHandle handle, Declaration[] declarations, Declaration[] innerDeclarations, ReteEvaluator reteEvaluator) {
-        final Object accumulatedObject = getAccumulatedObject(declarations, innerDeclarations, handle, leftTuple, reteEvaluator);
+    public Object accumulate(Object workingMemoryContext, Object context, BaseTuple leftTuple, FactHandle handle, Declaration[] declarations, Declaration[] innerDeclarations, ValueResolver valueResolver) {
+        final Object accumulatedObject = getAccumulatedObject(declarations, innerDeclarations, handle, leftTuple, (ReteEvaluator) valueResolver);
         return accumulateFunction.accumulateValue( (Serializable) context, accumulatedObject);
     }
 
-    protected abstract Object getAccumulatedObject( Declaration[] declarations, Declaration[] innerDeclarations, InternalFactHandle handle, Tuple tuple, ReteEvaluator reteEvaluator );
+    protected abstract Object getAccumulatedObject( Declaration[] declarations, Declaration[] innerDeclarations, FactHandle handle, BaseTuple tuple, ReteEvaluator reteEvaluator );
 
     @Override
     public boolean supportsReverse() {
@@ -85,8 +87,8 @@ public abstract class LambdaAccumulator implements Accumulator {
     }
 
     @Override
-    public boolean tryReverse(Object workingMemoryContext, Object context, Tuple leftTuple, InternalFactHandle handle, Object value,
-                              Declaration[] declarations, Declaration[] innerDeclarations, ReteEvaluator reteEvaluator) {
+    public boolean tryReverse(Object workingMemoryContext, Object context, BaseTuple leftTuple, FactHandle handle, Object value,
+                              Declaration[] declarations, Declaration[] innerDeclarations, ValueResolver valueResolver) {
         if (value == null) {
             throw new IllegalStateException("Reversing a not existing accumulated object for fact " + handle);
         }
@@ -94,7 +96,7 @@ public abstract class LambdaAccumulator implements Accumulator {
     }
 
     @Override
-    public Object getResult(Object workingMemoryContext, Object context, Tuple leftTuple, Declaration[] declarations, ReteEvaluator reteEvaluator) {
+    public Object getResult(Object workingMemoryContext, Object context, BaseTuple leftTuple, Declaration[] declarations, ValueResolver valueResolver) {
         try {
             return accumulateFunction.getResult( (Serializable) context );
         } catch (Exception e) {
@@ -113,7 +115,7 @@ public abstract class LambdaAccumulator implements Accumulator {
         }
 
         @Override
-        protected Object getAccumulatedObject( Declaration[] declarations, Declaration[] innerDeclarations, InternalFactHandle handle, Tuple tuple, ReteEvaluator reteEvaluator ) {
+        protected Object getAccumulatedObject( Declaration[] declarations, Declaration[] innerDeclarations, FactHandle handle, BaseTuple tuple, ReteEvaluator reteEvaluator ) {
             Object accumulateObject = handle.getObject();
             if (accumulateObject instanceof SubnetworkTuple ) {
                 Declaration[] bindingDeclarations = binding.getDeclarations();
@@ -150,7 +152,7 @@ public abstract class LambdaAccumulator implements Accumulator {
         }
 
         @Override
-        protected Object getAccumulatedObject( Declaration[] declarations, Declaration[] innerDeclarations, InternalFactHandle handle, Tuple tuple, ReteEvaluator reteEvaluator ) {
+        protected Object getAccumulatedObject( Declaration[] declarations, Declaration[] innerDeclarations, FactHandle handle, BaseTuple tuple, ReteEvaluator reteEvaluator ) {
             Object accumulateObject = handle.getObject();
             if (accumulateObject instanceof SubnetworkTuple && declarations.length > 0) {
                 return declarations[0].getValue( ( SubnetworkTuple ) accumulateObject );
@@ -170,7 +172,7 @@ public abstract class LambdaAccumulator implements Accumulator {
         }
 
         @Override
-        protected Object getAccumulatedObject( Declaration[] declarations, Declaration[] innerDeclarations, InternalFactHandle handle, Tuple tuple, ReteEvaluator reteEvaluator ) {
+        protected Object getAccumulatedObject( Declaration[] declarations, Declaration[] innerDeclarations, FactHandle handle, BaseTuple tuple, ReteEvaluator reteEvaluator ) {
             return value;
         }
     }

@@ -1,20 +1,58 @@
-/*
- * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.kiesession.entrypoints;
+
+
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.facttemplates.Fact;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.TypeDeclaration;
+import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.base.TraitHelper;
+import org.drools.core.common.ClassAwareObjectStore;
+import org.drools.core.common.DefaultEventHandle;
+import org.drools.core.common.EqualityKey;
+import org.drools.core.common.IdentityObjectStore;
+import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.InternalWorkingMemory;
+import org.drools.core.common.InternalWorkingMemoryEntryPoint;
+import org.drools.core.common.ObjectStore;
+import org.drools.core.common.ObjectStoreWrapper;
+import org.drools.core.common.ObjectTypeConfigurationRegistry;
+import org.drools.core.common.PropagationContext;
+import org.drools.core.common.PropagationContextFactory;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.common.TruthMaintenanceSystemFactory;
+import org.drools.core.impl.InternalRuleBase;
+import org.drools.core.reteoo.EntryPointNode;
+import org.drools.core.reteoo.ObjectTypeConf;
+import org.drools.core.reteoo.ObjectTypeNode;
+import org.drools.core.reteoo.RuntimeComponentFactory;
+import org.drools.core.reteoo.TerminalNode;
+import org.drools.core.rule.accessor.FactHandleFactory;
+import org.drools.core.rule.consequence.InternalMatch;
+import org.drools.util.bitmask.AllSetBitMask;
+import org.drools.util.bitmask.BitMask;
+import org.kie.api.conf.KieBaseMutabilityOption;
+import org.kie.api.runtime.rule.FactHandle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -28,43 +66,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.base.TraitHelper;
-import org.drools.core.common.ClassAwareObjectStore;
-import org.drools.core.common.EqualityKey;
-import org.drools.core.common.EventFactHandle;
-import org.drools.core.common.IdentityObjectStore;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.InternalWorkingMemoryEntryPoint;
-import org.drools.core.common.ObjectStore;
-import org.drools.core.common.ObjectStoreWrapper;
-import org.drools.core.common.ObjectTypeConfigurationRegistry;
-import org.drools.core.common.PropagationContext;
-import org.drools.core.common.PropagationContextFactory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.TruthMaintenanceSystemFactory;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.facttemplates.Fact;
-import org.drools.core.impl.RuleBase;
-import org.drools.core.reteoo.EntryPointNode;
-import org.drools.core.reteoo.ObjectTypeConf;
-import org.drools.core.reteoo.ObjectTypeNode;
-import org.drools.core.reteoo.RuntimeComponentFactory;
-import org.drools.core.reteoo.TerminalNode;
-import org.drools.core.rule.EntryPointId;
-import org.drools.core.rule.TypeDeclaration;
-import org.drools.core.rule.accessor.FactHandleFactory;
-import org.drools.core.rule.consequence.InternalMatch;
-import org.drools.core.util.bitmask.AllSetBitMask;
-import org.drools.core.util.bitmask.BitMask;
-import org.kie.api.conf.KieBaseMutabilityOption;
-import org.kie.api.runtime.rule.FactHandle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static java.util.Arrays.asList;
-import static org.drools.core.reteoo.PropertySpecificUtil.allSetBitMask;
-import static org.drools.core.reteoo.PropertySpecificUtil.calculatePositiveMask;
+import static org.drools.base.reteoo.PropertySpecificUtil.allSetBitMask;
+import static org.drools.base.reteoo.PropertySpecificUtil.calculatePositiveMask;
 
 public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, PropertyChangeListener {
 
@@ -77,7 +81,7 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
 
     private ObjectStore objectStore;
 
-    protected transient RuleBase ruleBase;
+    protected transient InternalRuleBase ruleBase;
 
     protected EntryPointId     entryPoint;
     protected EntryPointNode entryPointNode;
@@ -292,7 +296,7 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
         update( (InternalFactHandle) handle, object, mask, object.getClass(), null);
     }
 
-    public static BitMask calculateUpdateBitMask(RuleBase ruleBase, Object object, String[] modifiedProperties) {
+    public static BitMask calculateUpdateBitMask(InternalRuleBase ruleBase, Object object, String[] modifiedProperties) {
         String modifiedTypeName;
         List<String> accessibleProperties;
         boolean isPropertyReactive;
@@ -353,7 +357,7 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
 
                 if (handle.isExpired()) {
                     // let an expired event potentially (re)enters the objectStore, but make sure that it will be clear at the end of the inference cycle
-                    ((EventFactHandle)handle).setPendingRemoveFromStore(true);
+                    ((DefaultEventHandle)handle).setPendingRemoveFromStore(true);
                 }
 
                 final ObjectTypeConf typeConf = changedObject ?
@@ -477,7 +481,7 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
             removePropertyChangeListener( handle, true );
         }
 
-        PropagationContext propagationContext = delete( handle, object, typeConf, rule, null, terminalNode );
+        PropagationContext propagationContext = delete( handle, object, typeConf, rule, terminalNode );
 
         deleteFromTMS( handle, key, typeConf, propagationContext );
 
@@ -500,16 +504,26 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
         }
     }
 
-    public PropagationContext delete(InternalFactHandle handle, Object object, ObjectTypeConf typeConf, RuleImpl rule, InternalMatch internalMatch) {
-        return delete(handle, object, typeConf, rule, internalMatch, internalMatch == null ? null : internalMatch.getTuple().getTupleSink());
+    @Override
+    public PropagationContext delete(InternalFactHandle handle, Object object, ObjectTypeConf typeConf, RuleImpl rule, TerminalNode terminalNode) {
+        return delete(handle, object, typeConf, rule, terminalNode, false);
     }
 
-    public PropagationContext delete(InternalFactHandle handle, Object object, ObjectTypeConf typeConf, RuleImpl rule, InternalMatch internalMatch, TerminalNode terminalNode) {
+    @Override
+    public PropagationContext immediateDelete(InternalFactHandle handle, Object object, ObjectTypeConf typeConf, RuleImpl rule, TerminalNode terminalNode) {
+        return delete(handle, object, typeConf, rule, terminalNode, true);
+    }
+
+    private PropagationContext delete(InternalFactHandle handle, Object object, ObjectTypeConf typeConf, RuleImpl rule, TerminalNode terminalNode, boolean immediate) {
         final PropagationContext propagationContext = pctxFactory.createPropagationContext( this.reteEvaluator.getNextPropagationIdCounter(), PropagationContext.Type.DELETION,
                 rule, terminalNode,
                 handle, this.entryPoint );
 
-        this.entryPointNode.retractObject( handle, propagationContext, typeConf, this.reteEvaluator );
+        if (immediate) {
+            this.entryPointNode.immediateDeleteObject( handle, propagationContext, typeConf, this.reteEvaluator );
+        } else {
+            this.entryPointNode.retractObject( handle, propagationContext, typeConf, this.reteEvaluator );
+        }
 
         afterRetract(handle, rule, terminalNode);
 
@@ -597,7 +611,7 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
         return entryPointNode.getTypeConfReg();
     }
 
-    public RuleBase getKnowledgeBase() {
+    public InternalRuleBase getKnowledgeBase() {
         return ruleBase;
     }
 
@@ -678,7 +692,7 @@ public class NamedEntryPoint implements InternalWorkingMemoryEntryPoint, Propert
                 // even if they were also asserted into higher level OTNs as well
                 ObjectTypeNode otn = conf.getConcreteObjectTypeNode();
                 if (otn != null) {
-                    Iterator<InternalFactHandle> it = this.reteEvaluator.getNodeMemory(otn).iterator();
+                    Iterator<InternalFactHandle> it = otn.getFactHandlesIterator((InternalWorkingMemory) reteEvaluator);
                     while (it.hasNext()) {
                         removePropertyChangeListener(it.next(), false);
                     }

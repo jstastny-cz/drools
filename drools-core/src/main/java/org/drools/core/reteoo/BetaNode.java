@@ -1,19 +1,21 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
 import java.util.ArrayList;
@@ -21,8 +23,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.base.ObjectType;
+import org.drools.base.base.ObjectType;
 import org.drools.core.common.BetaConstraints;
 import org.drools.core.common.DoubleBetaConstraints;
 import org.drools.core.common.DoubleNonIndexSkipBetaConstraints;
@@ -33,7 +36,7 @@ import org.drools.core.common.PropagationContext;
 import org.drools.core.common.QuadroupleBetaConstraints;
 import org.drools.core.common.QuadroupleNonIndexSkipBetaConstraints;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.common.RuleBasePartitionId;
+import org.drools.base.common.RuleBasePartitionId;
 import org.drools.core.common.SingleBetaConstraints;
 import org.drools.core.common.SingleNonIndexSkipBetaConstraints;
 import org.drools.core.common.TripleBetaConstraints;
@@ -42,20 +45,20 @@ import org.drools.core.common.TupleSets;
 import org.drools.core.common.UpdateContext;
 import org.drools.core.reteoo.AccumulateNode.AccumulateMemory;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.rule.IndexableConstraint;
-import org.drools.core.rule.Pattern;
-import org.drools.core.rule.constraint.BetaNodeFieldConstraint;
+import org.drools.base.rule.IndexableConstraint;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.constraint.BetaNodeFieldConstraint;
 import org.drools.core.util.FastIterator;
-import org.drools.core.util.bitmask.AllSetBitMask;
-import org.drools.core.util.bitmask.BitMask;
-import org.drools.core.util.bitmask.EmptyBitMask;
-import org.drools.core.util.index.IndexUtil;
+import org.drools.util.bitmask.AllSetBitMask;
+import org.drools.util.bitmask.BitMask;
+import org.drools.util.bitmask.EmptyBitMask;
+import org.drools.base.util.index.IndexUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.drools.core.phreak.RuleNetworkEvaluator.doUpdatesReorderChildLeftTuple;
 import static org.drools.core.phreak.TupleEvaluationUtil.flushLeftTupleIfNecessary;
-import static org.drools.core.reteoo.PropertySpecificUtil.isPropertyReactive;
+import static org.drools.base.reteoo.PropertySpecificUtil.isPropertyReactive;
 
 public abstract class BetaNode extends LeftTupleSource
         implements
@@ -165,11 +168,11 @@ public abstract class BetaNode extends LeftTupleSource
         if (!isRightInputIsRiaNode()) {
             ObjectType objectType = pattern.getObjectType();
 
-            if (isPropertyReactive(context, objectType)) {
+            if (isPropertyReactive(context.getRuleBase(), objectType)) {
                 rightListenedProperties = pattern.getListenedProperties();
                 List<String> accessibleProperties = pattern.getAccessibleProperties( context.getRuleBase() );
                 rightDeclaredMask = pattern.getPositiveWatchMask(accessibleProperties);
-                rightDeclaredMask = rightDeclaredMask.setAll(constraints.getListenedPropertyMask(objectType, accessibleProperties));
+                rightDeclaredMask = rightDeclaredMask.setAll(constraints.getListenedPropertyMask(pattern, objectType, accessibleProperties));
                 rightNegativeMask = pattern.getNegativeWatchMask(accessibleProperties);
             } else {
                 // if property reactive is not on, then accept all modification propagations
@@ -367,7 +370,7 @@ public abstract class BetaNode extends LeftTupleSource
         rightInputIsRiaNode = NodeTypeEnums.RightInputAdapterNode == rightInput.getType();
     }
 
-    public FastIterator<Tuple> getRightIterator( TupleMemory memory ) {
+    public FastIterator<AbstractTuple> getRightIterator( TupleMemory memory ) {
         if ( this.indexedUnificationJoin ) {
             return memory.fullFastIterator();
         } else {
@@ -375,17 +378,17 @@ public abstract class BetaNode extends LeftTupleSource
         }
     }
 
-    public RightTuple getFirstRightTuple(final Tuple leftTuple,
+    public RightTupleImpl getFirstRightTuple(final Tuple leftTuple,
                                          final TupleMemory memory,
                                          final FastIterator<Tuple> it) {
         if ( this.indexedUnificationJoin ) {
-            return (RightTuple) it.next( null );
+            return (RightTupleImpl) it.next( null );
         } else {
-            return (RightTuple) memory.getFirst(leftTuple);
+            return (RightTupleImpl) memory.getFirst(leftTuple);
         }
     }
 
-    public FastIterator<Tuple> getLeftIterator(TupleMemory memory) {
+    public FastIterator<AbstractTuple> getLeftIterator(TupleMemory memory) {
         if (rightInputIsRiaNode) {
             return FastIterator.NullFastIterator.INSTANCE;
         } else {
@@ -404,7 +407,7 @@ public abstract class BetaNode extends LeftTupleSource
             return getStartTuple((SubnetworkTuple)rightTuple);
         } else {
             if ( this.indexedUnificationJoin ) {
-                return (LeftTuple) it.next( null );
+                return (LeftTuple) it.next(null );
             } else {
                 return (LeftTuple) memory.getFirst(rightTuple);
             }

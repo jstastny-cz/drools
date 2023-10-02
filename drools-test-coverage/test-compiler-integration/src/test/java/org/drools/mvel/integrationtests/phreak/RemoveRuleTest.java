@@ -1,29 +1,28 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.integrationtests.phreak;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.drools.core.base.ClassObjectType;
+import org.drools.base.base.ClassObjectType;
 import org.drools.core.common.InternalFactHandle;
 import org.drools.core.common.InternalWorkingMemory;
 import org.drools.core.common.NodeMemories;
-import org.drools.core.impl.RuleBase;
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.reteoo.BetaMemory;
 import org.drools.core.reteoo.EvalConditionNode;
 import org.drools.core.reteoo.JoinNode;
@@ -44,6 +43,10 @@ import org.junit.runners.Parameterized;
 import org.kie.api.KieBase;
 import org.kie.api.definition.KiePackage;
 import org.kie.api.runtime.rule.Match;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.core.phreak.PhreakBuilder.isEagerSegmentCreation;
@@ -99,7 +102,7 @@ public class RemoveRuleTest {
         assertThat(eMem.getRightTupleMemory().size()).isEqualTo(1);
 
         NodeMemories nms = wm.getNodeMemories();
-        assertThat(countNodeMemories(nms)).isEqualTo(12);
+        assertThat(countNodeMemories(nms)).isEqualTo(6);
 
         assertThat(sm.getStagedLeftTuples().getInsertFirst()).isNull();
         assertThat(list.size()).isEqualTo(1);
@@ -108,7 +111,7 @@ public class RemoveRuleTest {
 
         kbase.removeRule("org.kie", "r1");
 
-        assertThat(countNodeMemories(nms)).isEqualTo(6); // still has OTN
+        assertThat(countNodeMemories(nms)).isEqualTo(0);
     }
 
     @Test
@@ -169,7 +172,7 @@ public class RemoveRuleTest {
         wm.insert(new E(1));
         wm.fireAllRules();
 
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(7);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(6);
 
         kbase1.addPackages( buildKnowledgePackage("r2", "   a : A() B() C(2;) X() E()\n") );
         wm.fireAllRules();
@@ -198,7 +201,7 @@ public class RemoveRuleTest {
 
 
         kbase1.removeRule("org.kie", "r2");
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(10);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(6);
 
         assertThat(sm.getFirst()).isNull();
 
@@ -229,7 +232,7 @@ public class RemoveRuleTest {
         wm.insert(new E(1));
         wm.fireAllRules();
 
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(7);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(6);
 
         kbase1.addPackages( buildKnowledgePackage("r2", "   a:A() B() eval(1==1) eval(1==1) C(2;) \n") );
         wm.fireAllRules();
@@ -261,7 +264,7 @@ public class RemoveRuleTest {
 
 
         kbase1.removeRule("org.kie", "r2");
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(8);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(6);
 
         assertThat(sm.getFirst()).isNull();
 
@@ -292,11 +295,11 @@ public class RemoveRuleTest {
 
         wm.fireAllRules();
         assertThat(list.size()).isEqualTo(3);
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(7);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(6);
 
         kbase1.addPackages( buildKnowledgePackage("r2", "   a : A() B(2;) C() X() E()\n") );
         wm.fireAllRules();
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(17);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(11);
 
         ObjectTypeNode aotn = getObjectTypeNode(kbase1, A.class );
         LeftInputAdapterNode liaNode = (LeftInputAdapterNode) aotn.getObjectSinkPropagator().getSinks()[0];
@@ -325,10 +328,10 @@ public class RemoveRuleTest {
 
         wm.fireAllRules();
         assertThat(list.size()).isEqualTo(6);
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(17);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(11);
 
         kbase1.removeRule("org.kie", "r2");
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(12);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(6);
 
         assertThat(b1Mem.getSegmentMemory()).isSameAs(sm);
         assertThat(c1Mem.getSegmentMemory()).isSameAs(sm);
@@ -412,11 +415,11 @@ public class RemoveRuleTest {
 
         wm.fireAllRules();
         assertThat(list.size()).isEqualTo(2);
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(7);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(6);
 
         kbase1.addPackages( buildKnowledgePackage("r2", "   A() B() C() X() E()\n") );
         wm.fireAllRules();
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(8);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(7);
         assertThat(list.size()).isEqualTo(4);
 
         RuleTerminalNode rtn1 = getRtn("org.kie.r1", kbase1);
@@ -442,7 +445,7 @@ public class RemoveRuleTest {
         pmem1 = wm.getNodeMemory(rtn1);
         kbase1.removeRule("org.kie", "r2");
         System.out.println( "---" );
-        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(7);
+        assertThat(countNodeMemories(wm.getNodeMemories())).isEqualTo(6);
         assertThat(sm.getFirst()).isNull();
 
         pmem1 = wm.getNodeMemory(rtn1);
@@ -460,7 +463,7 @@ public class RemoveRuleTest {
 
     @Test
          public void testPopulatedMultipleSharesRemoveFirst() throws Exception {
-        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;)  A(2;) B(1;) B(2;) C(1;) X() E()\n" );
+        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;)  A(2;) B(1;) B(2;) C(1;) X() E()\n");
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase1.newKieSession());
         List list = new ArrayList();
         wm.setGlobal("list", list);
@@ -497,7 +500,7 @@ public class RemoveRuleTest {
 
     @Test
     public void testPopulatedMultipleSharesRemoveMid() throws Exception {
-        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;)  A(2;) B(1;) B(2;) C(1;) X() E()\n" );
+        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;)  A(2;) B(1;) B(2;) C(1;) X() E()\n");
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase1.newKieSession());
         List list = new ArrayList();
         wm.setGlobal("list", list);
@@ -534,7 +537,7 @@ public class RemoveRuleTest {
 
     @Test
     public void testPopulatedMultipleSharesRemoveLast() throws Exception {
-        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;)  A(2;) B(1;) B(2;) C(1;) X() E()\n" );
+        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;)  A(2;) B(1;) B(2;) C(1;) X() E()\n");
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase1.newKieSession());
         List list = new ArrayList();
         wm.setGlobal("list", list);
@@ -641,7 +644,7 @@ public class RemoveRuleTest {
     @Test
     public void testPathMemorySizeAfterSegmentMerge() throws Exception {
         // The two A(1;) are not actually shared, as r2 creates an AlphaTerminalNode
-        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;) B(1;)\n" );
+        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;) B(1;)\n");
         kbase1.addPackages( buildKnowledgePackage("r2", "   A(1;)\n") );
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase1.newKieSession());
         List list = new ArrayList();
@@ -664,7 +667,7 @@ public class RemoveRuleTest {
 
     @Test
     public void testPathMemorySizeAfterSegmentMergeNonInitialized() throws Exception {
-        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;) B(1;)\n" );
+        InternalKnowledgeBase kbase1 = buildKnowledgeBase("r1", "   A(1;) B(1;)\n");
         kbase1.addPackages( buildKnowledgePackage("r2", "   A(1;)\n") );
 
         InternalWorkingMemory wm = ((InternalWorkingMemory)kbase1.newKieSession());
@@ -681,7 +684,7 @@ public class RemoveRuleTest {
 
     @Test
     public void testSplitTwoBeforeCreatedSegment() throws Exception {
-        InternalKnowledgeBase kbase1 =          buildKnowledgeBase("r1", "   A(1;)  A(2;) B(1;) B(2;) C(1;) C(2;) X(1;) X(2;) E(1;) E(2;)\n" );
+        InternalKnowledgeBase kbase1 =          buildKnowledgeBase("r1", "   A(1;)  A(2;) B(1;) B(2;) C(1;) C(2;) X(1;) X(2;) E(1;) E(2;)\n");
         kbase1.addPackages( buildKnowledgePackage("r2", "   A(1;)  A(2;) B(1;) B(2;) C(1;) C(2;) X(1;) X(2;) E(1;) E(2;)\n") );
         kbase1.addPackages( buildKnowledgePackage("r3", "   A(1;)  A(2;) B(1;) B(2;) C(1;) C(2;) X(1;) X(2;)\n") );
         kbase1.addPackages( buildKnowledgePackage("r4", "   A(1;)  A(2;) B(1;) B(2;) C(1;) C(2;) \n") );
@@ -775,7 +778,7 @@ public class RemoveRuleTest {
     }
 
     public ObjectTypeNode getObjectTypeNode(KieBase kbase, Class<?> nodeClass) {
-        List<ObjectTypeNode> nodes = ((RuleBase)kbase).getRete().getObjectTypeNodes();
+        List<ObjectTypeNode> nodes = ((InternalRuleBase)kbase).getRete().getObjectTypeNodes();
         for ( ObjectTypeNode n : nodes ) {
             if ( ((ClassObjectType)n.getObjectType()).getClassType() == nodeClass ) {
                 return n;

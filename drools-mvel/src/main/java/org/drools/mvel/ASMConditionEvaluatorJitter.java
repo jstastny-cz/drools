@@ -1,17 +1,21 @@
-/*
- * Copyright (c) 2020. Red Hat, Inc. and/or its affiliates.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvel;
 
 import java.lang.reflect.Constructor;
@@ -29,10 +33,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.drools.base.base.ValueResolver;
 import org.drools.compiler.rule.builder.EvaluatorWrapper;
 import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.rule.Declaration;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.rule.Declaration;
 import org.drools.core.reteoo.Tuple;
 import org.drools.mvel.ConditionAnalyzer.AritmeticExpression;
 import org.drools.mvel.ConditionAnalyzer.AritmeticOperator;
@@ -57,6 +62,7 @@ import org.drools.mvel.ConditionAnalyzer.SingleCondition;
 import org.drools.mvel.ConditionAnalyzer.VariableExpression;
 import org.drools.mvel.asm.ClassGenerator;
 import org.drools.mvel.asm.GeneratorHelper;
+import org.kie.api.runtime.rule.FactHandle;
 import org.mvel2.asm.Label;
 import org.mvel2.asm.MethodVisitor;
 import org.mvel2.util.NullType;
@@ -114,7 +120,7 @@ public class ASMConditionEvaluatorJitter {
                                                    Declaration[] declarations,
                                                    EvaluatorWrapper[] operators,
                                                    ClassLoader classLoader,
-                                                   Tuple tuple) {
+                                                   BaseTuple tuple) {
         ClassGenerator generator = new ClassGenerator(getUniqueClassName(), classLoader)
                 .setInterfaces(ConditionEvaluator.class)
                 .addStaticField(ACC_PRIVATE | ACC_FINAL, "EXPRESSION", String.class, expression)
@@ -122,7 +128,7 @@ public class ASMConditionEvaluatorJitter {
 
         generator.addMethod(ACC_PUBLIC,
                             "evaluate",
-                            generator.methodDescr(boolean.class, InternalFactHandle.class, ReteEvaluator.class, Tuple.class),
+                            generator.methodDescr(boolean.class, FactHandle.class, ValueResolver.class, BaseTuple.class),
                             new EvaluateMethodGenerator(condition, declarations, operators, tuple));
 
         if (operators.length == 0) {
@@ -165,12 +171,12 @@ public class ASMConditionEvaluatorJitter {
 
         private final Condition condition;
         private final Declaration[] declarations;
-        private final Tuple tuple;
+        private final BaseTuple tuple;
         private final EvaluatorWrapper[] operators;
 
         private int[] declPositions;
 
-        public EvaluateMethodGenerator(Condition condition, Declaration[] declarations, EvaluatorWrapper[] operators, Tuple leftTuple) {
+        public EvaluateMethodGenerator(Condition condition, Declaration[] declarations, EvaluatorWrapper[] operators, BaseTuple leftTuple) {
             this.condition = condition;
             this.declarations = declarations;
             this.operators = operators;
@@ -192,7 +198,7 @@ public class ASMConditionEvaluatorJitter {
             declPositions = new int[declarations.length];
             List<GeneratorHelper.DeclarationMatcher> declarationMatchers = matchDeclarationsToTuple(declarations);
 
-            Tuple currentTuple = tuple;
+            BaseTuple currentTuple = tuple;
             mv.visitVarInsn(ALOAD, 3);
             store(4, Tuple.class);
 
@@ -205,7 +211,7 @@ public class ASMConditionEvaluatorJitter {
                     mv.visitInsn(AALOAD); // declarations[i]
                     mv.visitVarInsn(ALOAD, 2); // InternalWorkingMemory
                     mv.visitVarInsn(ALOAD, 1); // InternalFactHandle
-                    invokeInterface(InternalFactHandle.class, "getObject", Object.class);
+                    invokeInterface(FactHandle.class, "getObject", Object.class);
                     declPositions[i] = decPos;
                     decPos += storeObjectFromDeclaration(declarationMatcher.getDeclaration(), decPos);
                     continue;
@@ -218,7 +224,7 @@ public class ASMConditionEvaluatorJitter {
                 mv.visitInsn(AALOAD); // declarations[i]
                 mv.visitVarInsn(ALOAD, 2); // InternalWorkingMemory
                 load(4);
-                invokeInterface(Tuple.class, "getFactHandle", InternalFactHandle.class);
+                invokeInterface(Tuple.class, "getFactHandle", FactHandle.class);
                 invokeInterface(InternalFactHandle.class, "getObject", Object.class); // tuple.getFactHandle().getObject()
 
                 declPositions[i] = decPos;
@@ -234,7 +240,7 @@ public class ASMConditionEvaluatorJitter {
             mv.visitVarInsn(ALOAD, 1); // InternalFactHandle
             mv.visitVarInsn(ALOAD, 3); // Tuple
             getFieldFromThis("operators", EvaluatorWrapper[].class);
-            invokeStatic( EvaluatorHelper.class, "initOperators", void.class, InternalFactHandle.class, Tuple.class, EvaluatorWrapper[].class);
+            invokeStatic(EvaluatorHelper.class, "initOperators", void.class, FactHandle.class, Tuple.class, EvaluatorWrapper[].class);
         }
 
         private void jitCondition(Condition condition) {

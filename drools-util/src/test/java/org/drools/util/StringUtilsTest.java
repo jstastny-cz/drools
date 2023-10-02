@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.util;
 
 import java.util.List;
@@ -24,6 +27,7 @@ import static org.drools.util.StringUtils.getPkgUUID;
 import static org.drools.util.StringUtils.indexOfOutOfQuotes;
 import static org.drools.util.StringUtils.md5Hash;
 import static org.drools.util.StringUtils.splitStatements;
+import static org.drools.util.StringUtils.splitStatementsAcrossBlocks;
 
 public class StringUtilsTest {
 
@@ -246,5 +250,89 @@ public class StringUtilsTest {
         assertThat(statements.get(0)).isEqualTo("System.out.println(\"'\")");
         assertThat(statements.get(1)).isEqualTo("$visaApplication.setValidation( Validation.FAILED )");
         assertThat(statements.get(2)).isEqualTo("drools.update($visaApplication)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksIf() {
+        String text = "if (true) {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "}";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("if (true)");
+        assertThat(statements.get(1)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(2)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksDoWhile() {
+        String text = "do {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "} while (false);";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("do");
+        assertThat(statements.get(1)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(2)).isEqualTo("drools.update($fact)");
+        assertThat(statements.get(3)).isEqualTo("while (false)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksFor() {
+        String text = "for (int i = 0; i < 1; i++) {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "}";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("for (int i = 0; i < 1; i++)");
+        assertThat(statements.get(1)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(2)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksCommentedIf() {
+        String text = "// if (true) {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "// }";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(1)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksCommentedIfMissingStartingBrace() {
+        String text = "// if (true)\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "// }";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(1)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksCommentedIfMissingEndingBrace() {
+        String text = "// if (true) {\n" +
+                      "  $fact.value1 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "//";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(1)).isEqualTo("drools.update($fact)");
+    }
+
+    @Test
+    public void splitStatementsAcrossBlocksIfInsideAndOutsideAssginment() {
+        String text = "$fact.value1 = 2;\n" +
+                      "if (true) {\n" +
+                      "  $fact.value2 = 2;\n" +
+                      "  drools.update($fact);\n" +
+                      "}";
+        List<String> statements = splitStatementsAcrossBlocks(text);
+        assertThat(statements.get(0)).isEqualTo("$fact.value1 = 2");
+        assertThat(statements.get(1)).isEqualTo("if (true)");
+        assertThat(statements.get(2)).isEqualTo("$fact.value2 = 2");
+        assertThat(statements.get(3)).isEqualTo("drools.update($fact)");
     }
 }

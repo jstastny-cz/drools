@@ -1,36 +1,38 @@
-/*
- * Copyright 2005 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
 
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Objects;
-
-import org.drools.core.base.SalienceInteger;
+import org.drools.base.base.SalienceInteger;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.GroupElement;
 import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.PropagationContext;
 import org.drools.core.common.ReteEvaluator;
-import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.drools.core.phreak.PhreakRuleTerminalNode;
 import org.drools.core.phreak.RuleExecutor;
 import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.rule.Declaration;
-import org.drools.core.rule.GroupElement;
-import org.drools.core.common.PropagationContext;
 import org.drools.core.rule.consequence.InternalMatch;
+
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Leaf Rete-OO node responsible for enacting <code>Action</code> s on a
@@ -64,7 +66,6 @@ public class RuleTerminalNode extends AbstractTerminalNode {
                             final BuildContext context) {
         super( id,
                context.getPartitionId(),
-               context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation(),
                source,
                context,
                rule, subrule, subruleIndex);
@@ -144,17 +145,6 @@ public class RuleTerminalNode extends AbstractTerminalNode {
             }
             RuleExecutor ruleExecutor = ((RuleTerminalNodeLeftTuple)leftTuple).getRuleAgendaItem().getRuleExecutor();
             PhreakRuleTerminalNode.doLeftDelete(ruleExecutor.getPathMemory().getActualActivationsManager( reteEvaluator ), ruleExecutor, leftTuple);
-        }
-    }
-
-    public static class SortDeclarations
-            implements
-            Comparator<Declaration> {
-        public final static SortDeclarations instance = new SortDeclarations();
-
-        public int compare(Declaration d1,
-                           Declaration d2) {
-            return (d1.getIdentifier().compareTo( d2.getIdentifier() ));
         }
     }
 

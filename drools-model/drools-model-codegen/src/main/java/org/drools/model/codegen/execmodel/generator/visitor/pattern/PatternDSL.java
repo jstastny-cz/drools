@@ -1,36 +1,27 @@
-/*
- * Copyright 2019 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- *
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.model.codegen.execmodel.generator.visitor.pattern;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.compiler.compiler.DescrBuildError;
-import org.drools.core.util.PropertyReactivityUtil;
 import org.drools.drl.ast.descr.AccumulateDescr;
 import org.drools.drl.ast.descr.BaseDescr;
 import org.drools.drl.ast.descr.ExprConstraintDescr;
@@ -55,6 +46,16 @@ import org.drools.model.codegen.execmodel.generator.drlxparse.SingleDrlxParseSuc
 import org.drools.model.codegen.execmodel.generator.visitor.DSLNode;
 import org.drools.model.codegen.execmodel.generator.visitor.FromVisitor;
 import org.kie.api.definition.rule.Watch;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.drools.compiler.rule.builder.PatternBuilder.lookAheadFieldsOfIdentifier;
 import static org.drools.model.codegen.execmodel.generator.DrlxParseUtil.getPatternListenedProperties;
@@ -108,12 +109,16 @@ public abstract class PatternDSL implements DSLNode {
     }
 
     private void generatePatternIdentifierIfMissing() {
-        if (pattern.getIdentifier() == null) {
-            final String generatedName = generateName("pattern_" + patternType.getSimpleName());
-            final String patternNameAggregated = findFirstInnerBinding(constraintDescrs, patternType)
-                    .map(ib -> context.getAggregatePatternMap().putIfAbsent(new AggregateKey(ib, patternType), generatedName))
-                    .orElse(generatedName);
-            pattern.setIdentifier( GENERATED_VARIABLE_PREFIX + patternNameAggregated);
+        // the PatternDescr can be shared by multiple rules in case of rules inheritance, so its identifier has to
+        // be set atomically when rule generation is performed in parallel
+        synchronized (pattern) {
+            if (pattern.getIdentifier() == null) {
+                final String generatedName = generateName("pattern_" + patternType.getSimpleName());
+                final String patternNameAggregated = findFirstInnerBinding(constraintDescrs, patternType)
+                        .map(ib -> context.getAggregatePatternMap().putIfAbsent(new AggregateKey(ib, patternType), generatedName))
+                        .orElse(generatedName);
+                pattern.setIdentifier(GENERATED_VARIABLE_PREFIX + patternNameAggregated);
+            }
         }
     }
 

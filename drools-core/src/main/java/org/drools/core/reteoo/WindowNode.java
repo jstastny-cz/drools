@@ -1,44 +1,47 @@
-/*
- * Copyright 2011 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.core.reteoo;
+
+import org.drools.base.base.ObjectType;
+import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.constraint.AlphaNodeFieldConstraint;
+import org.drools.core.RuleBaseConfiguration;
+import org.drools.core.common.DefaultEventHandle;
+import org.drools.core.common.InternalFactHandle;
+import org.drools.core.common.InternalWorkingMemory;
+import org.drools.core.common.Memory;
+import org.drools.core.common.MemoryFactory;
+import org.drools.core.common.PropagationContext;
+import org.drools.core.common.ReteEvaluator;
+import org.drools.core.reteoo.WindowNode.WindowMemory;
+import org.drools.core.reteoo.builder.BuildContext;
+import org.drools.core.rule.BehaviorContext;
+import org.drools.core.rule.BehaviorManager;
+import org.drools.core.rule.BehaviorRuntime;
+import org.drools.core.rule.SlidingTimeWindow;
+import org.drools.util.bitmask.BitMask;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
-import org.drools.core.RuleBaseConfiguration;
-import org.drools.core.common.EventFactHandle;
-import org.drools.core.common.InternalFactHandle;
-import org.drools.core.common.InternalWorkingMemory;
-import org.drools.core.common.Memory;
-import org.drools.core.common.MemoryFactory;
-import org.drools.core.common.ReteEvaluator;
-import org.drools.core.reteoo.ObjectTypeNode.ObjectTypeNodeMemory;
-import org.drools.core.reteoo.WindowNode.WindowMemory;
-import org.drools.core.reteoo.builder.BuildContext;
-import org.drools.core.rule.Behavior;
-import org.drools.core.rule.BehaviorManager;
-import org.drools.core.rule.EntryPointId;
-import org.drools.core.rule.SlidingTimeWindow;
-import org.drools.core.rule.constraint.AlphaNodeFieldConstraint;
-import org.drools.core.base.ObjectType;
-import org.drools.core.common.PropagationContext;
-import org.drools.core.util.bitmask.BitMask;
 
 /**
  * <code>WindowNodes</code> are nodes in the <code>Rete</code> network used
@@ -77,12 +80,11 @@ public class WindowNode extends ObjectSource
      */
     public WindowNode(final int id,
                       final List<AlphaNodeFieldConstraint> constraints,
-                      final List<Behavior> behaviors,
+                      final List<BehaviorRuntime> behaviors,
                       final ObjectSource objectSource,
                       final BuildContext context) {
         super(id,
               context.getPartitionId(),
-              context.getRuleBase().getRuleBaseConfiguration().isMultithreadEvaluation(),
               objectSource,
               context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeHashingThreshold(),
               context.getRuleBase().getRuleBaseConfiguration().getAlphaNodeRangeIndexThreshold());
@@ -90,7 +92,7 @@ public class WindowNode extends ObjectSource
         this.constraints = new ArrayList<>(constraints);
         this.behavior = new BehaviorManager(behaviors);
         this.entryPoint = context.getCurrentEntryPoint();
-        for ( Behavior b :  behaviors ) {
+        for ( BehaviorRuntime b :  behaviors ) {
             if ( b instanceof SlidingTimeWindow ) {
                 ((SlidingTimeWindow)b).setWindowNode( this );
             }
@@ -115,7 +117,7 @@ public class WindowNode extends ObjectSource
     /**
      * Returns the list of behaviors for this window node
      */
-    public Behavior[] getBehaviors() {
+    public BehaviorRuntime[] getBehaviors() {
         return behavior.getBehaviors();
     }
 
@@ -126,7 +128,7 @@ public class WindowNode extends ObjectSource
     public void assertObject(final InternalFactHandle factHandle,
                              final PropagationContext pctx,
                              final ReteEvaluator reteEvaluator) {
-        EventFactHandle evFh = ( EventFactHandle ) factHandle;
+        DefaultEventHandle evFh = (DefaultEventHandle) factHandle;
         for (AlphaNodeFieldConstraint constraint : constraints) {
             if (!constraint.isAllowed(evFh, reteEvaluator)) {
                 return;
@@ -163,8 +165,8 @@ public class WindowNode extends ObjectSource
 
     @Override
     public void modifyRightTuple(RightTuple rightTuple, PropagationContext context, ReteEvaluator reteEvaluator) {
-        EventFactHandle originalFactHandle = ( EventFactHandle ) rightTuple.getFactHandle();
-        EventFactHandle cloneFactHandle  = ( EventFactHandle ) rightTuple.getContextObject();
+        DefaultEventHandle originalFactHandle = (DefaultEventHandle) rightTuple.getFactHandle();
+        DefaultEventHandle cloneFactHandle  = (DefaultEventHandle) rightTuple.getContextObject();
         originalFactHandle.quickCloneUpdate( cloneFactHandle ); // make sure all fields are updated
 
         // behavior modify
@@ -219,12 +221,8 @@ public class WindowNode extends ObjectSource
         sink.byPassModifyToBetaNode(factHandle, modifyPreviousTuples, context, reteEvaluator);
     }
 
-    public void updateSink(final ObjectSink sink,
-                           final PropagationContext context,
-                           final InternalWorkingMemory workingMemory) {
-        final ObjectTypeNodeMemory omem = workingMemory.getNodeMemory( getObjectTypeNode());
-        Iterator<InternalFactHandle> it = omem.iterator();
-
+    public void updateSink(ObjectSink sink, PropagationContext context, InternalWorkingMemory workingMemory) {
+        Iterator<InternalFactHandle> it = getObjectTypeNode().getFactHandlesIterator(workingMemory);
         while (it.hasNext()) {
             assertObject( it.next(), context, workingMemory );
         }
@@ -314,7 +312,7 @@ public class WindowNode extends ObjectSource
     }
 
     public static class WindowMemory implements Memory {
-        public Behavior.Context[] behaviorContext;
+        public BehaviorContext[] behaviorContext;
 
         public short getNodeType() {
             return NodeTypeEnums.WindowNode;
@@ -351,10 +349,10 @@ public class WindowNode extends ObjectSource
         public void reset() {
         }
 
-        public Collection<EventFactHandle> getFactHandles() {
-            List<EventFactHandle> eventFactHandles = new ArrayList<>(  );
-            for (Behavior.Context ctx : behaviorContext) {
-                for (EventFactHandle efh : ctx.getFactHandles()) {
+        public Collection<DefaultEventHandle> getFactHandles() {
+            List<DefaultEventHandle> eventFactHandles = new ArrayList<>(  );
+            for (BehaviorContext ctx : behaviorContext) {
+                for (DefaultEventHandle efh : ctx.getFactHandles()) {
                     eventFactHandles.add(efh.getLinkedFactHandle());
                 }
             }

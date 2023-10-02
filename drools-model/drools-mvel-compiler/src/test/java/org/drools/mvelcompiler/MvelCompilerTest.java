@@ -1,19 +1,21 @@
-/*
- * Copyright 2021 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.drools.mvelcompiler;
 
 import java.math.BigDecimal;
@@ -341,7 +343,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testSetterBigDecimalConstantModify() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify ( $p )  { salary = 50000 }; }",
-             "{ { $p.setSalary(new java.math.BigDecimal(50000)); } }",
+             "{ { $p.setSalary(new java.math.BigDecimal(50000)); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -349,7 +351,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testSetterBigDecimalLiteralModify() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify ( $p )  { salary = 50000B }; }",
-             "{ { $p.setSalary(new java.math.BigDecimal(\"50000\")); } }",
+             "{ { $p.setSalary(new java.math.BigDecimal(\"50000\")); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -357,7 +359,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testSetterBigDecimalLiteralModifyNegative() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify ( $p )  { salary = -50000B }; }",
-             "{ { $p.setSalary(new java.math.BigDecimal(\"-50000\")); } }",
+             "{ { $p.setSalary(new java.math.BigDecimal(\"-50000\")); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -407,7 +409,61 @@ public class MvelCompilerTest implements CompilerTest {
                          "      list.add(\"before \" + $p + \", money = \" + $p.getSalary()); " +
                          "      { $p.setSalary(new java.math.BigDecimal(50000)); }" +
                          "      list.add(\"after \" + $p + \", money = \" + $p.getSalary()); " +
+                         "      drools.update($p);" +
                          "}\n",
+             result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
+    }
+
+    @Test
+    public void modifyInsideIfTrueBlock() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+             "{" +
+                     "    if (true) { " +
+                     "        modify ( $p )  { salary = 50000 };  " +
+                     "    }" +
+                     "}",
+             "{\n" +
+                     "    if (true) {" +
+                     "        { $p.setSalary(new java.math.BigDecimal(50000)); }" +
+                     "        drools.update($p);" +
+                     "    }" +
+                     "}",
+             result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
+    }
+
+    @Test
+    public void modifyInsideIfFalseBlock() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+             "{" +
+                     "    if (false) { " +
+                     "        modify ( $p )  { salary = 50000 };  " +
+                     "    }" +
+                     "}",
+             "{\n" +
+                     "    if (false) {" +
+                     "        { $p.setSalary(new java.math.BigDecimal(50000)); }" +
+                     "        drools.update($p);" +
+                     "    }" +
+                     "}",
+             result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
+    }
+
+    @Test
+    public void emptyModifyInsideIfBlockAndSetterOutside() {
+        test(ctx -> ctx.addDeclaration("$p", Person.class),
+             "{" +
+                     "    $p.salary = 50000;" +
+                     "    if (false) { " +
+                     "        modify ( $p )  { };  " +
+                     "    }" +
+                     "}",
+             "{\n" +
+                     "    $p.setSalary(new java.math.BigDecimal(50000));" +
+                     "    if (false) {" +
+                     "        { }" +
+                     "        drools.update($p);" +
+                     "    }" +
+                     "}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -820,7 +876,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testModify() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify ( $p )  { name = \"Luca\", age = 35 }; }",
-             "{\n {\n $p.setName(\"Luca\");\n $p.setAge(35);\n }\n }",
+             "{\n {\n $p.setName(\"Luca\");\n $p.setAge(35);\n } drools.update($p);\n }",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -831,7 +887,7 @@ public class MvelCompilerTest implements CompilerTest {
                  ctx.addDeclaration("$p2", Person.class);
              },
              "{ modify ( $p )  { items = $p2.items }; }",
-             "{\n {\n $p.setItems($p2.getItems());\n }\n }",
+             "{\n {\n $p.setItems($p2.getItems());\n } drools.update($p);\n }",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -839,7 +895,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testModifySemiColon() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify($p) { setAge(1); }; }",
-             "{ { $p.setAge(1); } }",
+             "{ { $p.setAge(1); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -847,7 +903,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testModifyWithAssignment() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify($p) { age = $p.age+1 }; }",
-             "{ { $p.setAge($p.getAge() + 1); } }",
+             "{ { $p.setAge($p.getAge() + 1); } drools.update($p); }",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -855,7 +911,7 @@ public class MvelCompilerTest implements CompilerTest {
     public void testModifyWithMethodCall() {
         test(ctx -> ctx.addDeclaration("$p", Person.class),
              "{ modify($p) { addresses.clear() }; }",
-             "{ { $p.getAddresses().clear(); } }",
+             "{ { $p.getAddresses().clear(); } drools.update($p);}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
     }
 
@@ -901,6 +957,7 @@ public class MvelCompilerTest implements CompilerTest {
                      "      {\n" +
                      "          $p.setName(\"without_parent\");\n" +
                      "      }\n" +
+                     "      drools.update($p);\n" +
                      "  } " +
                      "}",
              result -> assertThat(allUsedBindings(result)).containsExactlyInAnyOrder("$p"));
@@ -925,6 +982,7 @@ public class MvelCompilerTest implements CompilerTest {
                      "{ " +
                      "  $person.setAddress($newAddress);\n" +
                      "}\n" +
+                     "drools.update($person);\n" +
                      "}");
     }
 

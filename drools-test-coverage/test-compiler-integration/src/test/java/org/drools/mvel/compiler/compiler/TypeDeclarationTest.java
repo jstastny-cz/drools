@@ -1,18 +1,21 @@
-/*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.drools.mvel.compiler.compiler;
 
 import java.io.StringReader;
@@ -28,9 +31,9 @@ import java.util.List;
 
 import org.drools.compiler.builder.impl.KnowledgeBuilderImpl;
 import org.drools.compiler.kie.builder.impl.InternalKieModule;
-import org.drools.core.common.EventFactHandle;
-import org.drools.core.definitions.impl.KnowledgePackageImpl;
-import org.drools.core.rule.TypeDeclaration;
+import org.drools.core.common.DefaultEventHandle;
+import org.drools.base.definitions.impl.KnowledgePackageImpl;
+import org.drools.base.rule.TypeDeclaration;
 import org.drools.testcoverage.common.util.KieBaseTestConfiguration;
 import org.drools.testcoverage.common.util.KieBaseUtil;
 import org.drools.testcoverage.common.util.KieUtil;
@@ -527,7 +530,7 @@ public class TypeDeclarationTest {
         KieSession knowledgeSession = kBase.newKieSession();
         FactHandle handle = knowledgeSession.insert( new EventBar.Foo() );
 
-        assertThat(handle instanceof EventFactHandle).isTrue();
+        assertThat(handle instanceof DefaultEventHandle).isTrue();
 
     }
 
@@ -549,7 +552,7 @@ public class TypeDeclarationTest {
         KieSession knowledgeSession = kBase.newKieSession();
         FactHandle handle = knowledgeSession.insert( new EventBar.Foo() );
 
-        assertThat(handle instanceof EventFactHandle).isTrue();
+        assertThat(handle instanceof DefaultEventHandle).isTrue();
 
     }
 
@@ -952,7 +955,7 @@ public class TypeDeclarationTest {
         FactHandle handle = session.insert( foo );
         int n = session.fireAllRules( 5 );
 
-        assertThat(handle instanceof EventFactHandle).isTrue();
+        assertThat(handle instanceof DefaultEventHandle).isTrue();
         assertThat(n).isEqualTo(1);
         assertThat(type.get(foo, "age")).isEqualTo(99);
     }
