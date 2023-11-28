@@ -43,19 +43,19 @@ environments:
     - sonarcloud
     - coverage
 repositories:
-- name: incubator-kie-drools
+- name: drools
   job_display_name: drools
 # Not yet migrated to Apache
 # - name: incubator-kie-drools-website
 #   job_display_name: drools-website
-- name: incubator-kie-benchmarks
+- name: kie-benchmarks
   job_display_name: kie-benchmarks
 ## TODO to check if should be enabled
 # - name: incubator-kie-jpmml-integration
 #   job_display_name: kie-jpmml-integration
 git:
   author:
-    name: apache
+    name: jstastny-cz
     # Taken from https://ci-builds.apache.org/credentials/
     # Need to be verified
     credentials_id: 399061d0-5ab5-4142-a186-a52081fef742
@@ -76,7 +76,7 @@ git:
   jenkins_config_path: .ci/jenkins
 buildchain_config:
   git:
-    repository: incubator-kie-drools
+    repository: drools
     file_path: .ci/buildchain-config.yaml
     token_credentials_id: kie-ci3-token
 maven:
